@@ -10,26 +10,38 @@ const _schema = i.schema({
     }),
     $users: i.entity({
       email: i.string().unique().indexed().optional(),
-      imageURL: i.string().optional(),
-      type: i.string().optional(),
+      displayName: i.string().optional(),
+      photoURL: i.string().optional(),
+      createdAt: i.number().optional(),
     }),
+    builds: i.entity({
+      instantId: i.string(),
+      code: i.string(),
+      streaming: i.string().optional(),
+      slug: i.string().indexed().unique(),
+      error: i.json().optional(),
+      status: i.string().optional(),
+      createdAt: i.number(),
+      updatedAt: i.number(),
+    }),
+    favorites: i.entity({
+      createdAt: i.number()
+    })
   },
   links: {
-    $usersLinkedPrimaryUser: {
-      forward: {
-        on: '$users',
-        has: 'one',
-        label: 'linkedPrimaryUser',
-        onDelete: 'cascade',
-      },
-      reverse: {
-        on: '$users',
-        has: 'many',
-        label: 'linkedGuestUsers',
-      },
+    buildOwner: {
+      forward: { on: 'builds', has: 'one', label: 'owner', required: true },
+      reverse: { on: '$users', has: 'many', label: 'builds' }
     },
-  },
-  rooms: {},
+    favoriteUser: {
+      forward: { on: 'favorites', has: 'one', label: 'user', required: true },
+      reverse: { on: '$users', has: 'many', label: 'favorites' }
+    },
+    favoriteBuild: {
+      forward: { on: 'favorites', has: 'one', label: 'build', required: true },
+      reverse: { on: 'builds', has: 'many', label: 'favorites' }
+    }
+  }
 });
 
 // This helps TypeScript display nicer intellisense
