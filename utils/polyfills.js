@@ -14,7 +14,6 @@ if (Platform.OS !== 'web') {
     polyfillGlobal('TextEncoderStream', () => TextEncoderStream);
     polyfillGlobal('TextDecoderStream', () => TextDecoderStream);
   };
-
   setupPolyfills();
 }
 

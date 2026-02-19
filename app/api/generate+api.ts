@@ -1,4 +1,4 @@
-import { id } from "@instantdb/react-native";
+import { id } from "@instantdb/admin";
 import { platformApi } from "lib/instant/platformAPI";
 import { adminDB } from "lib/instant/adminDb";
 import { generateAndStreamCode } from "lib/ai/codeGenerator";
