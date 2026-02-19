@@ -5,6 +5,7 @@
     "scheme": "Kairo",
     "version": "1.0.0",
     "web": {
+      "output" :"server",
       "favicon": "./assets/favicon.png"
     },
     "experiments": {

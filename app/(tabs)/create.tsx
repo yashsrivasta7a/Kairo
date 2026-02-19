@@ -1,12 +1,11 @@
 import { View, Text, Modal, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native'
-import React, { useState } from 'react'
+import React from 'react'
 import { useCreateModalStore } from '../../lib/store'
 import { BlurView } from 'expo-blur'
 
 
 export default function Create() {
-    const { isOpen, close } = useCreateModalStore()
-    const [appName, setAppName] = useState('')
+    const { isOpen, close, appName, setAppName } = useCreateModalStore()
 
     return (
         <Modal
