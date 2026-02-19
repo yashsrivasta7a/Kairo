@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth, useUser } from '@clerk/clerk-expo'
 import { LinearGradient } from 'expo-linear-gradient'
+import { SignOutButton } from 'components/Buttons/signout'
 
 const HomeScreen = () => {
     const { user, isLoaded } = useUser()
@@ -50,6 +51,7 @@ const HomeScreen = () => {
                 </View>
                 <View className="flex-1 justify-center items-center">
                     <Text className="text-white">YAHA DASHBOARD KIND OF SHIT AEGI</Text>
+<SignOutButton/>
                 </View>
             </SafeAreaView>
         </LinearGradient>
