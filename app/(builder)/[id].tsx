@@ -5,7 +5,9 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
-  ActivityIndicatorComponent,
+  ActivityIndicator,
+  Modal,
+  Pressable,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,9 +16,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import DropDown from 'components/DropDown';
 import UserProfile from 'components/userProfile';
-import CodeViewer from 'components/CodeViewer';
+
 import { useBuilds } from 'lib/instant/useBuilds';
-import { useCreateModalStore } from 'lib/store';
+import BuildUi from 'lib/buildUi';
+
 
 export default function BuildScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -24,6 +27,7 @@ export default function BuildScreen() {
   const router = useRouter();
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [selectedBuild, setSelectedBuild] = useState(id || '');
 
   useEffect(() => {
@@ -78,9 +82,34 @@ export default function BuildScreen() {
           </View>
           <UserProfile />
         </View>
-        <View className="flex-1 gap-1">
+        <View className="flex-1 gap-0 ">
+           <View className="relative flex-1 justify-center">
+            <TextInput
+              className="min-h-[80px] w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 pr-16 text-white"
+              placeholder="Describe your app..."
+              placeholderTextColor="#9ca3af"
+              value={prompt}
+              multiline
+              onChangeText={setPrompt}
+              textAlignVertical="top"
+            />
+
+            <TouchableOpacity
+              className={`absolute right-4 rounded-full p-4 ${
+                isGenerating ? 'bg-[#6D28D9]/60' : 'bg-[#6D28D9]'
+              }`}
+              onPress={handleGenerate}
+              disabled={isGenerating}
+              activeOpacity={0.8}>
+              <Ionicons
+                name={isGenerating ? 'hourglass-outline' : 'rocket-outline'}
+                size={20}
+                color="#fff"
+              />
+            </TouchableOpacity>
+          </View>
           {currentBuild && (
-            <View className="mt-4 flex-[2] rounded-xl border border-white/10 bg-white/5">
+            <View className=" flex-[2] rounded-xl border border-white/10 bg-white/5">
               <View className="flex-row items-center justify-between border-b border-white/10 px-4 py-2">
                 <Text className="text-xs font-semibold uppercase tracking-wider text-white/60">
                   Generated Code
@@ -88,10 +117,18 @@ export default function BuildScreen() {
                 <View className="flex-row items-center gap-2">
                   {currentBuild.streaming === 'true' && (
                     <View className="flex-row items-center gap-1">
-                      <ActivityIndicatorComponent size="small" color="#8B5CF6" />
+                      <ActivityIndicator size="small" color="#8B5CF6" />
                       <Text className="text-xs text-purple-400">Streaming...</Text>
                     </View>
                   )}
+                
+                  <TouchableOpacity
+                    onPress={() => setShowPreview(true)}
+                    className="px-2 py-15 rounded "
+                    activeOpacity={0.8}
+                  >
+                    <Text className="text-xs text-white">Preview</Text>
+                  </TouchableOpacity>
                   <View
                     className={`rounded-full px-2 py-0.5 ${
                       currentBuild.status === 'completed'
@@ -130,31 +167,20 @@ export default function BuildScreen() {
               </ScrollView>
             </View>
           )}
-          <View className="relative flex-1 justify-center">
-            <TextInput
-              className="min-h-[80px] w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 pr-16 text-white"
-              placeholder="Describe your app..."
-              placeholderTextColor="#9ca3af"
-              value={prompt}
-              multiline
-              onChangeText={setPrompt}
-              textAlignVertical="top"
-            />
-
-            <TouchableOpacity
-              className={`absolute right-4 rounded-full p-4 ${
-                isGenerating ? 'bg-[#6D28D9]/60' : 'bg-[#6D28D9]'
-              }`}
-              onPress={handleGenerate}
-              disabled={isGenerating}
-              activeOpacity={0.8}>
-              <Ionicons
-                name={isGenerating ? 'hourglass-outline' : 'rocket-outline'}
-                size={20}
-                color="#fff"
-              />
-            </TouchableOpacity>
-          </View>
+          {currentBuild && (
+            <Modal visible={showPreview} animationType="slide" onRequestClose={() => setShowPreview(false)}>
+              <SafeAreaView style={{ flex: 1 }}>
+                <View className="flex-row items-center justify-between px-4 py-3">
+                  <Text className="text-sm font-semibold text-black">Preview</Text>
+                  <Pressable onPress={() => setShowPreview(false)}>
+                    <Text className="text-sm text-black">Close</Text>
+                  </Pressable>
+                </View>
+                <BuildUi code={currentBuild.code} instantId={currentBuild.instantId} />
+              </SafeAreaView>
+            </Modal>
+          )}
+         
         </View>
       </SafeAreaView>
     </LinearGradient>

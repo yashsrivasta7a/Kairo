@@ -1,7 +1,7 @@
 import { createAzure } from '@ai-sdk/azure';
 import { streamText } from 'ai';
 import { adminDB } from 'lib/instant/adminDb';
-import { getSystemPrompt } from './systemPrompt';
+import { getSystemPrompt } from '../../utils/systemPrompt';
 
 const azure = createAzure({
     resourceName: process.env.AZURE_OPENAI_ENDPOINT!

@@ -9,7 +9,7 @@ import { adminDB } from "lib/instant/adminDb";
  */
 async function getOrCreateInstantUser(
     clerkId: string,
-    extra?: { email?: string; displayName?: string; photoURL?: string }
+    extra?: { email?: string; }
 ): Promise<string> {
     const { $users } = await adminDB.query({ $users: { $: { where: { clerkId } } } });
 
@@ -22,8 +22,6 @@ async function getOrCreateInstantUser(
         adminDB.tx.$users[newUserId].update({
             clerkId,
             email: extra?.email || '',
-            displayName: extra?.displayName || '',
-            photoURL: extra?.photoURL || '',
             createdAt: Date.now(),
         }),
     ]);

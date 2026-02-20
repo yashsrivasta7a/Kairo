@@ -5,26 +5,25 @@ import { generateAndStreamCode } from "lib/ai/codeGenerator";
 
 async function getOrCreateInstantUser(
     clerkId: string,
-    extra?: { email?: string; displayName?: string; photoURL?: string }
+    extra?: { email?: string; }
 ): Promise<string> {
     const { $users } = await adminDB.query({ $users: { $: { where: { clerkId } } } });
-
+    
     if ($users && $users.length > 0) {
         return $users[0].id;
     }
-
-   
+    
+    
     const newUserId = id();
     await adminDB.transact([
         adminDB.tx.$users[newUserId].update({
             clerkId,
             email: extra?.email || '',
-            displayName: extra?.displayName || '',
-            photoURL: extra?.photoURL || '',
             createdAt: Date.now(),
         }),
     ]);
-
+    
+    console.log(newUserId);
     return newUserId;
 }
 

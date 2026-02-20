@@ -10,8 +10,6 @@ const _schema = i.schema({
     }),
     $users: i.entity({
       email: i.string().unique().indexed().optional(),
-      displayName: i.string().optional(),
-      photoURL: i.string().optional(),
       createdAt: i.number().optional(),
       clerkId: i.string().unique().indexed().optional(),
     }),
@@ -19,7 +17,7 @@ const _schema = i.schema({
       instantId: i.string(),
       code: i.string(),
       streaming: i.string().optional(),
-      slug: i.string().indexed().unique(),
+      slug: i.string().indexed(),
       error: i.json().optional(),
       status: i.string().optional(),
       createdAt: i.number(),

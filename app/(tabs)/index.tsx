@@ -33,8 +33,16 @@ const HomeScreen = () => {
 <UserProfile/>
                 </View>
                 <View className="flex-1 justify-center items-center">
-                    <Text className="text-white text-2xl font-bold mb-4">Welcome back, {user?.firstName || 'Developer'}!</Text>
-                   <SignOutButton/>
+                    <View className="items-center">
+                        <Image
+                            source={{ uri: 'https://static.vecteezy.com/system/resources/previews/051/691/288/non_2x/a-man-with-glasses-and-curly-hair-is-shown-in-a-black-and-white-silhouette-free-vector.jpg' }}
+                            accessibilityLabel="Curly-haired avatar with specs"
+                            style={{ width: 160, height: 160, borderRadius: 80, marginBottom: 16, borderWidth: 2, borderColor: 'rgba(255,255,255,0.08)' }}
+                        />
+                        <Text className="text-white text-2xl font-bold mb-1">Welcome back, Madrasi !!</Text>
+                        
+                    </View>
+                   <SignOutButton  />
                 </View>
             </SafeAreaView>
         </LinearGradient>

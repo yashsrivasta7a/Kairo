@@ -52,7 +52,8 @@ export default function Create() {
           <View className="flex-1 items-center justify-center bg-black/50 px-4">
             <TouchableWithoutFeedback>
               <BlurView
-                intensity={125}
+                intensity={50}
+                experimentalBlurMethod="dimezisBlurView"
                 tint="dark"
                 style={{
                   width: '100%',
@@ -60,8 +61,8 @@ export default function Create() {
                   borderRadius: 16,
                   overflow: 'hidden',
                   borderWidth: 1,
-
                   borderColor: 'rgba(255, 255, 255, 0.12)',
+                  
                 }}>
                 <View style={{ padding: 24 }}>
                   <Text className="mb-2 text-xl font-bold text-white">Name your App</Text>

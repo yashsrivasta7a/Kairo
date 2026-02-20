@@ -11,8 +11,6 @@ const _schema = i.schema({
     }),
     $users: i.entity({
       email: i.string().unique().indexed().optional(),
-      displayName: i.string().optional(),
-      photoURL: i.string().optional(),
       createdAt: i.number().optional(),
       clerkId: i.string().unique().indexed().optional(),
     }),
