@@ -20,7 +20,7 @@ export async function generateAndStreamCode({
     userId: string;
 }) {
     let code = '';
-    let streaming = true;
+    let streaming: string = 'true';
 
     // debounce / concurrency control
     let isPending = false;
@@ -67,7 +67,7 @@ export async function generateAndStreamCode({
         await adminDB.transact([
             adminDB.tx.builds[buildId]
                 .update({
-                    streaming: true,
+                    streaming: 'true',
                     status: 'generating',
                     updatedAt: Date.now(),
                 })
@@ -92,12 +92,12 @@ export async function generateAndStreamCode({
             }
         }
 
-        streaming = false;
+        streaming = 'false';
 
         await adminDB.transact([
             adminDB.tx.builds[buildId].update({
                 code,
-                streaming: false,
+                streaming: 'false',
                 status: 'completed',
                 updatedAt: Date.now(),
             }),
@@ -108,7 +108,7 @@ export async function generateAndStreamCode({
         try {
             await adminDB.transact([
                 adminDB.tx.builds[buildId].update({
-                    streaming: false,
+                    streaming: 'false',
                     status: 'failed',
                     error: { message: String(error) },
                     updatedAt: Date.now(),

@@ -1,5 +1,5 @@
 import { init } from "@instantdb/admin";
-import schema from "./schema";
+import schema from "./schema.server";
 
 export const adminDB = init({
     appId: process.env.EXPO_PUBLIC_INSTANT_APP_ID,

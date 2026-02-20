@@ -3,6 +3,11 @@
 import type { InstantRules } from '@instantdb/react-native';
 
 const rules = {
+  $users: {
+    allow: {
+      view: "true",
+    },
+  },
   builds: {
     allow: {
       view: "true",

@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { ActivityIndicator, View, Text, TextInput } from 'react-native';
 import './global.css';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const tokenCache = {
   async getToken(key: string) {
@@ -36,7 +37,7 @@ function RootLayoutNav() {
     if (!isSignedIn && !inAuthGroup) {
       router.replace('/(auth)/signin');
     } else if (isSignedIn && (inAuthGroup || !segments[0])) {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)'); // tabs abhi dev mode hai
     }
   }, [isSignedIn, isLoaded, segments]);
 
@@ -54,6 +55,7 @@ function RootLayoutNav() {
       <StatusBar hidden />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(builder)" />
 
       </Stack>
@@ -61,7 +63,7 @@ function RootLayoutNav() {
   );
 }
 
-
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -95,11 +97,14 @@ const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!
 
 
   return (
+    <QueryClientProvider client={queryClient}>
+
     <ClerkProvider
       publishableKey={publishableKey}
       tokenCache={tokenCache}
-    >
+      >
       <RootLayoutNav />
     </ClerkProvider>
+      </QueryClientProvider>
   );
 }

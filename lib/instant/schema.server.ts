@@ -1,6 +1,7 @@
-// Docs: https://www.instantdb.com/docs/modeling-data
+// Server-safe schema — imports from @instantdb/admin instead of @instantdb/react-native
+// to avoid pulling in React Native dependencies in API routes.
 
-import { i } from '@instantdb/react-native';
+import { i } from '@instantdb/admin';
 
 const _schema = i.schema({
   entities: {
@@ -45,7 +46,6 @@ const _schema = i.schema({
   }
 });
 
-// This helps TypeScript display nicer intellisense
 type _AppSchema = typeof _schema;
 interface AppSchema extends _AppSchema { }
 const schema: AppSchema = _schema;

@@ -1,92 +1,114 @@
-import { View, Text, Modal, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native'
-import React from 'react'
-import { useCreateModalStore } from '../../lib/store'
-import { BlurView } from 'expo-blur'
-
+import {
+  View,
+  Text,
+  Modal,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  ActivityIndicator,
+} from 'react-native';
+import React from 'react';
+import { useCreateModalStore } from '../../lib/store';
+import { BlurView } from 'expo-blur';
+import { router } from 'expo-router';
+import { useUser } from '@clerk/clerk-expo';
 
 export default function Create() {
-    const { isOpen, close, appName, setAppName } = useCreateModalStore()
+  const { isOpen, close, appName, setAppName, setBuildId, isCreating, setIsCreating } = useCreateModalStore();
+  const { user } = useUser();
 
-    return (
-        <Modal
-            animationType="fade"
-            transparent={true}
-            visible={isOpen}
-            onRequestClose={close}
-        >
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                className="flex-1"
-            >
-                <TouchableWithoutFeedback onPress={close}>
-                    <View className="flex-1 justify-center items-center bg-black/50 px-4">
-                        <TouchableWithoutFeedback>
-                            <BlurView
-                                intensity={125}
-                                tint="dark"
-                                style={{
-                                    width: '100%',
-                                    maxWidth: 360,
-                                    borderRadius: 16,
-                                    overflow: 'hidden',
-                                    borderWidth: 1,
+  const handleCreate = async () => {
+    if (!appName.trim() || !user?.id) return;
 
-                                    borderColor: 'rgba(255, 255, 255, 0.12)',
-                                }}
-                            >
-                                <View style={{ padding: 24 }}>
-                                    <Text className="text-xl font-bold text-white mb-2">
-                                        Name your App
-                                    </Text>
+    setIsCreating(true);
+    try {
+      const response = await fetch('/api/create-build', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, appName: appName.trim() }),
+      });
 
-                                    <Text className="text-sm text-gray-400 mb-5">
-                                        Give your new application a name to get started.
-                                    </Text>
+      if (response.ok) {
+        const { buildId, slug } = await response.json();
+        setBuildId(buildId);
+        close();
+        router.push(`/(builder)/${buildId}`);
+      }
+    } catch (err) {
+      console.error('Failed to create build:', err);
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
-                                    <View className="mb-6">
-                                        <Text className="text-sm font-medium text-gray-300 mb-2">
-                                            Application Name
-                                        </Text>
+  return (
+    <Modal animationType="fade" transparent={true} visible={isOpen} onRequestClose={close}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1">
+        <TouchableWithoutFeedback onPress={close}>
+          <View className="flex-1 items-center justify-center bg-black/50 px-4">
+            <TouchableWithoutFeedback>
+              <BlurView
+                intensity={125}
+                tint="dark"
+                style={{
+                  width: '100%',
+                  maxWidth: 360,
+                  borderRadius: 16,
+                  overflow: 'hidden',
+                  borderWidth: 1,
 
-                                        <TextInput
-                                            className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white"
-                                            placeholder="e.g. My Awesome App"
-                                            placeholderTextColor="#9ca3af"
-                                            value={appName}
-                                            onChangeText={setAppName}
-                                            autoFocus
-                                        />
-                                    </View>
+                  borderColor: 'rgba(255, 255, 255, 0.12)',
+                }}>
+                <View style={{ padding: 24 }}>
+                  <Text className="mb-2 text-xl font-bold text-white">Name your App</Text>
 
-                                    <View className="flex-row gap-3">
-                                        <TouchableOpacity
-                                            className="flex-1 py-3 rounded-xl bg-white/10 items-center"
-                                            onPress={close}
-                                        >
-                                            <Text className="font-semibold text-gray-300">
-                                                Cancel
-                                            </Text>
-                                        </TouchableOpacity>
+                  <Text className="mb-5 text-sm text-gray-400">
+                    Give your new application a name to get started.
+                  </Text>
 
-                                        <TouchableOpacity
-                                            className="flex-1 py-3 rounded-xl bg-[#6D28D9] items-center"
-                                            onPress={() => {
-                                                console.log('Create app:', appName)
-                                                close()
-                                            }}
-                                        >
-                                            <Text className="font-semibold text-white">
-                                                Create
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-                            </BlurView>
+                  <View className="mb-6">
+                    <Text className="mb-2 text-sm font-medium text-gray-300">Application Name</Text>
 
-                        </TouchableWithoutFeedback>
-                    </View>
-                </TouchableWithoutFeedback>
-            </KeyboardAvoidingView>
-        </Modal>
-    )
+                    <TextInput
+                      className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-white"
+                      placeholder="e.g. My Awesome App"
+                      placeholderTextColor="#9ca3af"
+                      value={appName}
+                      onChangeText={setAppName}
+                      autoFocus
+                    />
+                  </View>
+
+                  <View className="flex-row gap-3">
+                    <TouchableOpacity
+                      className="flex-1 items-center rounded-xl bg-white/10 py-3"
+                      onPress={close}>
+                      <Text className="font-semibold text-gray-300">Cancel</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      className={`flex-1 items-center rounded-xl py-3 ${
+                        isCreating || !appName.trim() ? 'bg-[#6D28D9]/50' : 'bg-[#6D28D9]'
+                      }`}
+                      onPress={handleCreate}
+                      disabled={isCreating || !appName.trim()}>
+                      {isCreating ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text className="font-semibold text-white">Create</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </BlurView>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
 }
