@@ -13,7 +13,6 @@ import UserProfile from 'components/userProfile'
 const HomeScreen = () => {
     const { user, isLoaded } = useUser()
     
-    if (!isLoaded) return null;
     return (
         <LinearGradient
             colors={['#0d031fff', '#000000']}
@@ -21,30 +20,30 @@ const HomeScreen = () => {
             end={{ x: 1, y: 1 }}
             style={{ flex: 1 }}
         >
-
-
-            <SafeAreaView className="flex-1 px-6">
-                <StatusBar barStyle="light-content" />
-                <View className="flex-row items-center justify-between py-3 ">
-                    <View>
-                        <Ionicons name="logo-gitlab" size={28} color="white" />
-                    </View>
-                    
-<UserProfile/>
-                </View>
-                <View className="flex-1 justify-center items-center">
-                    <View className="items-center">
-                        <Image
-                            source={{ uri: 'https://static.vecteezy.com/system/resources/previews/051/691/288/non_2x/a-man-with-glasses-and-curly-hair-is-shown-in-a-black-and-white-silhouette-free-vector.jpg' }}
-                            accessibilityLabel="Curly-haired avatar with specs"
-                            style={{ width: 160, height: 160, borderRadius: 80, marginBottom: 16, borderWidth: 2, borderColor: 'rgba(255,255,255,0.08)' }}
-                        />
-                        <Text className="text-white text-2xl font-bold mb-1">Welcome back, Madrasi !!</Text>
+            {isLoaded ? (
+                <SafeAreaView className="flex-1 px-6">
+                    <StatusBar barStyle="light-content" />
+                    <View className="flex-row items-center justify-between py-3 ">
+                        <View>
+                            <Ionicons name="logo-gitlab" size={28} color="white" />
+                        </View>
                         
+                        <UserProfile/>
                     </View>
-                   <SignOutButton  />
+                    <View className="flex-1 justify-center items-center">
+                        <View className="items-center">
+                            
+                            <Text className="text-white text-2xl font-bold mb-1">Welcome back, {user?.firstName || 'User'}</Text>
+                            
+                        </View>
+                        <SignOutButton  />
+                    </View>
+                </SafeAreaView>
+            ) : (
+                <View className="flex-1 items-center justify-center">
+                    <Text className="text-white">Loading...</Text>
                 </View>
-            </SafeAreaView>
+            )}
         </LinearGradient>
     )
 }
