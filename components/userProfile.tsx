@@ -2,11 +2,16 @@ import { View, Text, TouchableOpacity, Image } from 'react-native'
 import React from 'react'
 import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const userProfile = () => {
-    const {user} = useUser();
+    const { user } = useUser();
+    const router = useRouter();
   return (
-    <TouchableOpacity className="relative p-1 rounded-full border border-purple-500">
+    <TouchableOpacity
+        onPress={() => router.push('/profile')}
+        className="relative p-1 rounded-full border border-purple-500"
+    >
                         {user?.imageUrl ? (
                             <View className="relative">
 
