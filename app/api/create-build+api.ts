@@ -18,12 +18,17 @@ async function getOrCreateInstantUser(
     }
 
     const newUserId = id();
+    const userPayload: Record<string, any> = {
+        clerkId,
+        createdAt: Date.now(),
+    };
+
+    if (extra?.email && extra.email.trim() !== '') {
+        userPayload.email = extra.email;
+    }
+
     await adminDB.transact([
-        adminDB.tx.$users[newUserId].update({
-            clerkId,
-            email: extra?.email || '',
-            createdAt: Date.now(),
-        }),
+        adminDB.tx.$users[newUserId].update(userPayload),
     ]);
 
     return newUserId;
