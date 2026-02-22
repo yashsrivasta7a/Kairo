@@ -57,7 +57,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(builder)" />
-
+        <Stack.Screen name="profile" />
       </Stack>
     </>
   );
