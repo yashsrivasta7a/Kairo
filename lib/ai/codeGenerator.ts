@@ -1,7 +1,7 @@
 import { createAzure } from '@ai-sdk/azure';
 import { streamText, generateText } from 'ai';
 import { adminDB } from 'lib/instant/adminDb';
-import { getSystemPrompt } from '../../utils/systemPrompt';
+import { getSystemPrompt } from '../../utils/systemPromptV2';
 
 const azure = createAzure({
     resourceName: process.env.AZURE_OPENAI_ENDPOINT!
@@ -60,7 +60,6 @@ Return ONLY the enhanced prompt (no explanations or meta-commentary). The enhanc
         return optimizedPrompt;
     } catch (error) {
         console.error('Error optimizing prompt:', error);
-        // Fallback to original prompt if optimization fails
         return userPrompt;
     }
 }

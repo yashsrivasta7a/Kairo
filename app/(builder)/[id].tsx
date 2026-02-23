@@ -196,7 +196,7 @@ export default function BuildScreen() {
                   </Text>
                   </View>
                 )}
-              </View>}
+              </View>
               </SafeAreaView>
             </Modal>
           </View>
