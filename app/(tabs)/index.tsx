@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Animated,
+  Easing,
   RefreshControl,
   StyleSheet,
 } from 'react-native';
@@ -51,6 +52,26 @@ export default function HomeScreen() {
   const headerA = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.timing(headerA, { toValue: 1, duration: 600, useNativeDriver: true }).start();
+  }, []);
+
+  // Single wave animation for building blocks
+  const BLOCK_MAX = 8;
+  const waveAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(waveAnim, {
+          toValue: BLOCK_MAX,
+          duration: 2200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: false,
+        }),
+        Animated.delay(400),
+        Animated.timing(waveAnim, { toValue: 0, duration: 0, useNativeDriver: false }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
   }, []);
 
   const recent = [...builds]
@@ -177,6 +198,21 @@ export default function HomeScreen() {
                     </View>
                     <Text className="font-dmsans text-xs text-purple-600">ALL TIME</Text>
                   </View>
+                  <Text
+                    style={{
+                      position: 'absolute',
+                      right: -24,
+                      bottom: -32,
+                      fontFamily: 'DMSans_700Bold',
+                      fontSize: 140,
+                      lineHeight: 120,
+                      color: '#7c3aed',
+                      opacity: 0.08,
+                      letterSpacing: -6,
+                    }}
+                    numberOfLines={1}>
+                    {total}
+                  </Text>
 
                   
                   <View className="items-start">
@@ -253,6 +289,21 @@ export default function HomeScreen() {
                   glowOpacity={0.22}
                   innerBg="rgba(124,58,237,0.06)">
                   <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        position: 'absolute',
+                        right: -30,
+                        bottom: -35,
+                        fontFamily: 'DMSans_700Bold',
+                        fontSize: 88,
+                        lineHeight: 88,
+                        color: '#7c3aed',
+                        opacity: 0.09,
+                        letterSpacing: -4,
+                      }}
+                      numberOfLines={1}>
+                      {deployed}
+                    </Text>
                     <View className="mb-1 flex-row items-center">
                       <Pulse color="#7c3aed" />
                       <Text className="font-dmsans text-xs font-semibold text-purple-700">
@@ -306,17 +357,37 @@ export default function HomeScreen() {
                         marginTop: 'auto',
                         paddingTop: 10,
                       }}>
-                      {Array.from({ length: Math.min(total, 8) }).map((_, i) => (
-                        <View
-                          key={i}
-                          style={{
-                            width: 7,
-                            height: 7,
-                            borderRadius: 2,
-                            backgroundColor: i < building ? '#a78bfa' : 'rgba(0,0,0,0.06)',
-                          }}
-                        />
-                      ))}
+                      {Array.from({ length: Math.min(total || 8, 8) }).map((_, i) => {
+                        const isActive = i < building;
+                        const fillW = waveAnim.interpolate({
+                          inputRange: [i, i + 1],
+                          outputRange: [0, 7],
+                          extrapolate: 'clamp',
+                        });
+                        return (
+                          <View
+                            key={i}
+                            style={{
+                              width: 7,
+                              height: 7,
+                              borderRadius: 2,
+                              backgroundColor: isActive ? 'rgba(124,58,237,0.18)' : 'rgba(0,0,0,0.06)',
+                              overflow: 'hidden',
+                            }}>
+                            <Animated.View
+                              style={{
+                                position: 'absolute',
+                                width: fillW,
+                                height: 7,
+                                top: 0,
+                                left: 0,
+                                backgroundColor: '#7c3aed',
+                                borderRadius: 2,
+                              }}
+                            />
+                          </View>
+                        );
+                      })}
                     </View>
                   </View>
                 </GlowCard>
@@ -357,6 +428,19 @@ export default function HomeScreen() {
                       <Text className="text-white/95">60%</Text>
                     </Text>
                   </View>
+                  <Ionicons
+                    name="apps-outline"
+                    size={120}
+                    color="#fff"
+                    style={{
+                      position: 'absolute',
+                      right: -18,
+                      bottom: -24,
+                      opacity: 0.06,
+                      transform: [{ rotate: '-15deg' }],
+                      elevation: 0,
+                    }}
+                  />
                 </LinearGradient>
               </GlowCard>
 
@@ -375,6 +459,18 @@ export default function HomeScreen() {
                     <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 20, color: '#3b0764' }}>Explore</Text>
                     <Text className="font-dmsans mt-1 text-xs text-purple-700">Community</Text>
                   </View>
+                  <Ionicons
+                    name="globe-outline"
+                    size={96}
+                    color="#7c3aed"
+                    style={{
+                      position: 'absolute',
+                      right: -42,
+                      bottom: -42,
+                      opacity: 0.05,
+                      transform: [{ rotate: '-10deg' }],
+                    }}
+                  />
                 </View>
               </GlowCard>
             </View>
@@ -419,63 +515,98 @@ export default function HomeScreen() {
           </GlowCard>
 
           
-          <View style={{ flexDirection: 'row', gap: GAP , marginHorizontal:10 }}>
-            
+          <View style={{ flexDirection: 'row', gap: GAP, marginHorizontal: 10 }}>
+
+            {/* Profile card */}
             <GlowCard
-              style={{ flex: 1, height: 138 }}
+              style={{ flex: 1, height: 152 }}
               glowColor="#a78bfa"
-              glowOpacity={0.14}
-              innerBg="rgba(167,139,250,0.06)">
+              glowOpacity={0.22}
+              innerBg="rgba(167,139,250,0.07)"
+              onPress={() => router.push('/profile')}>
               <View style={{ flex: 1, justifyContent: 'space-between' }}>
+                {/* Ghost icon background */}
+                <Ionicons
+                  name="person-circle"
+                  size={100}
+                  color="#a78bfa"
+                  style={{ position: 'absolute', right: -18, bottom: -14, opacity: 0.07 }}
+                />
+                {/* Avatar */}
                 {user?.imageUrl ? (
-                  <View
-                    className="w-13 h-13 overflow-hidden rounded-[18px] border-2 bg-white"
-                    style={{ borderColor: 'rgba(168,85,247,0.7)' }}>
-                    <Image
-                      source={{ uri: user.imageUrl }}
-                      style={{ width: '100%', height: '100%' }}
-                    />
+                  <View style={{
+                    width: 44, height: 44, borderRadius: 14,
+                    overflow: 'hidden', borderWidth: 2,
+                    borderColor: 'rgba(168,85,247,0.6)', backgroundColor: '#fff',
+                  }}>
+                    <Image source={{ uri: user.imageUrl }} style={{ width: 44, height: 44 }} />
                   </View>
                 ) : (
-                  <View className="h-11 w-11 items-center justify-center rounded-lg border-purple-200 bg-purple-100">
-                    <Ionicons name="person" size={20} color="#a855f7" />
+                  <View style={{ width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ede9fe' }}>
+                    <Ionicons name="person" size={22} color="#a855f7" />
                   </View>
                 )}
+                {/* Info */}
                 <View>
-                  <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 15, color: '#3b0764' }}
-                    numberOfLines={1}>
+                  <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 15, color: '#3b0764' }} numberOfLines={1}>
                     {user?.firstName || 'Profile'}
                   </Text>
-                  <Text className="font-dmsans text-xs text-purple-600">View profile →</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2, gap: 6 }}>
+                    <View style={{ backgroundColor: 'rgba(124,58,237,0.1)', borderRadius: 20, paddingHorizontal: 7, paddingVertical: 2 }}>
+                      <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 10, color: '#7c3aed' }}>{total} apps</Text>
+                    </View>
+                  </View>
+                  <Text className="font-dmsans mt-1.5 text-[11px] text-purple-500">View profile →</Text>
                 </View>
               </View>
             </GlowCard>
 
-            
+            {/* AI Build card */}
             <GlowCard
-              style={{ flex: 1.65, height: 158 }}
+              style={{ flex: 1.65, height: 152 }}
               glowColor="#7c3aed"
-              glowOpacity={0.5}
-              innerBg="rgba(88,28,235,0.88)"
-              onPress={open}>
-              <View style={{ flex: 1, justifyContent: 'space-between' }}>
-                <View className="flex-row items-center">
-                  <Pulse color="#7c3aed" />
-                  <Text className="font-dmsans text-[11.5px] text-purple-200">AI Ready</Text>
+              glowOpacity={0.65}
+              innerBg="transparent"
+              onPress={open}
+              noPad>
+              <LinearGradient
+                colors={['#3b0764', '#5b21b6', '#7c3aed']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ flex: 1, borderRadius: 20, padding: 16, justifyContent: 'space-between' }}>
+                {/* Decorative bg element */}
+                <Ionicons
+                  name="sparkles"
+                  size={110}
+                  color="#fff"
+                  style={{ position: 'absolute', right: -16, bottom: -20, opacity: 0.06 }}
+                />
+                {/* Top row */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="flash" size={14} color="#fff" />
+                  </View>
+                  <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 11, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.5 }}>AI BUILDER</Text>
                 </View>
+                {/* Copy */}
                 <View>
-                  <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 16, color: '#fff', lineHeight: 23 }}>
-                    Describe it.{'\n'}We'll build it.
+                  <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 18, color: '#fff', lineHeight: 24, letterSpacing: -0.4 }}>
+                    Describe it.{'\n'}Ship it.
                   </Text>
                   <TouchableOpacity
                     onPress={open}
-                    className="mt-2 self-start rounded-full bg-purple-600 px-3 py-1">
-                    <Text className="font-dmsans text-[11px] font-semibold text-white">
-                      Start now →
+                    style={{
+                      marginTop: 10, alignSelf: 'flex-start',
+                      backgroundColor: 'rgba(255,255,255,0.18)',
+                      borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5,
+                      borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
+                    }}>
+                    <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 11, color: '#fff' }}>
+                      Build now →
                     </Text>
                   </TouchableOpacity>
                 </View>
-              </View>
+              </LinearGradient>
             </GlowCard>
           </View>
         </ScrollView>

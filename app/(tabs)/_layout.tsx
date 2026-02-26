@@ -19,8 +19,8 @@ export default function TabsLayout() {
                     tabBarStyle: {
                             backgroundColor: 'transparent',
                             paddingHorizontal: 10,
-                            marginHorizontal: 60,
-                            bottom: 44,
+                            marginHorizontal: 70,
+                            bottom: 48,
                             left: 24,
                             right: 24,
                             height: 54,
@@ -76,37 +76,28 @@ export default function TabsLayout() {
                     options={{
                         tabBarLabel: () => null,
                         tabBarIcon: () => (
-                            <View style={{ position: 'absolute', top: -25 }}>
-                                <BlurView
-                                    intensity={25}
-                                    tint="dark"
+                            <View style={{ position: 'absolute', top: -18 }}>
+                                <LinearGradient
+                                    colors={['#3b0764', '#6d28d9', '#7c3aed']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
                                     style={{
                                         overflow: 'hidden',
-                                        height: 92,
-                                        width: 92,
-                                        borderRadius: 46,
-                                        borderWidth: 1,
-                                        borderColor: 'rgba(255, 255, 255, 0.15)',
+                                        height: 78,
+                                        width: 78,
+                                        borderRadius: 44,
                                         justifyContent: 'center',
                                         alignItems: 'center',
-                                    }}
-                                >
-                                        <LinearGradient
-                                            colors={['#6d28d9', '#7c3aed']}
-                                            start={{ x: 0, y: 0 }}
-                                            end={{ x: 1, y: 1 }}
-                                            style={{
-                                                height: 76,
-                                                width: 76,
-                                                borderRadius: 38,
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                                borderWidth: 1,
-                                                borderColor: 'rgba(124,58,237,0.12)'
-                                            }}>
-                                            <Ionicons name="logo-gitlab" size={28} color="white" />
-                                        </LinearGradient>
-                                </BlurView>
+                                        shadowColor: '#3b0764',
+                                        shadowOpacity: 0.55,
+                                        shadowRadius: 14,
+                                        shadowOffset: { width: 0, height: 6 },
+                                        elevation: 12,
+                                        borderWidth: 2,
+                                        borderColor: 'rgba(255,255,255,0.25)',
+                                    }}>
+                                        <Ionicons name="logo-gitlab" size={28} color="white" />
+                                </LinearGradient>
                             </View>
                         ),
                     }}

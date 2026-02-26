@@ -12,7 +12,6 @@ const TIPS = [
 export default function TipBanner() {
   const [i, setI] = useState(0)
   const opacity = useRef(new Animated.Value(1)).current
-  const scale = useRef(new Animated.Value(1)).current
   const pulse = useRef(new Animated.Value(1)).current
 
   // Dot pulse loop
@@ -25,18 +24,12 @@ export default function TipBanner() {
     ).start()
   }, [])
 
-  // Tip rotation
+  // Tip rotation — fade only, no pop
   useEffect(() => {
     const id = setInterval(() => {
       Animated.timing(opacity, { toValue: 0, duration: 180, useNativeDriver: true }).start(() => {
         setI(x => (x + 1) % TIPS.length)
-        Animated.parallel([
-          Animated.sequence([
-            Animated.spring(scale, { toValue: 1.035, useNativeDriver: true, speed: 80, bounciness: 6 }),
-            Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 40, bounciness: 2 }),
-          ]),
-          Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }),
-        ]).start()
+        Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }).start()
       })
     }, 3800)
     return () => clearInterval(id)
@@ -45,7 +38,6 @@ export default function TipBanner() {
   return (
     <Animated.View
       style={{
-        transform: [{ scale }],
         marginBottom: 14,
         shadowColor: '#7c3aed',
         shadowOpacity: 0.22,
