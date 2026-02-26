@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons'
 import { BlurView } from 'expo-blur'
+import { LinearGradient } from 'expo-linear-gradient'
 import { Tabs, useRouter } from 'expo-router'
 import { View } from 'react-native'
 import { useCreateModalStore } from '../../lib/store'
@@ -16,36 +17,42 @@ export default function TabsLayout() {
                 screenOptions={{
                     headerShown: false,
                     tabBarStyle: {
-                        backgroundColor: 'transparent',
-                        paddingHorizontal: 10,
-                        marginHorizontal: 60,
-                        bottom: 44,
-                        left: 24,
-                        right: 24,
-                        height: 54,
-                        borderRadius: 50,
-                        position: 'absolute',
-                        borderWidth: 1,
-                        borderColor: 'rgba(255, 255, 255, 0.1)',
-                        elevation: 10,
-                        shadowColor: '#000',
-                        shadowOpacity: 0.25,
-                        shadowRadius: 12,
-                        shadowOffset: { width: 0, height: 8 },
-                    },
-                    tabBarBackground: () => (
-                        <BlurView
-                            intensity={30}
-                            tint="dark"
-                            style={{
-                                flex: 1,
-                                borderRadius: 50,
-                                overflow: 'hidden',
-                            }}
-                        />
-                    ),
-                    tabBarActiveTintColor: '#fff',
-                    tabBarInactiveTintColor: '#a1a1aa',
+                            backgroundColor: 'transparent',
+                            paddingHorizontal: 10,
+                            marginHorizontal: 60,
+                            bottom: 44,
+                            left: 24,
+                            right: 24,
+                            height: 54,
+                            borderRadius: 50,
+                            position: 'absolute',
+                            borderWidth: 1,
+                            borderColor: 'rgba(124,58,237,0.12)',
+                            elevation: 10,
+                            shadowColor: '#7c3aed',
+                            shadowOpacity: 0.08,
+                            shadowRadius: 12,
+                            shadowOffset: { width: 0, height: 6 },
+                        },
+                        tabBarBackground: () => (
+                            <LinearGradient
+                                colors={[ 'rgba(255,255,255,0.7)', 'rgba(244,236,255,0.6)' ]}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={{
+                                    flex: 1,
+                                    borderRadius: 50,
+                                    overflow: 'hidden',
+                                }}>
+                                <BlurView
+                                    intensity={65}
+                                    tint="light"
+                                    style={{ flex: 1 }}
+                                />
+                            </LinearGradient>
+                        ),
+                        tabBarActiveTintColor: '#7c3aed',
+                        tabBarInactiveTintColor: '#a1a1aa',
                 }}
             >
                 <Tabs.Screen
@@ -84,27 +91,21 @@ export default function TabsLayout() {
                                         alignItems: 'center',
                                     }}
                                 >
-                                    <View
-                                        style={{
-                                            height: 76,
-                                            width: 76,
-                                            borderRadius: 38,
-                                            backgroundColor: '#3c147dff',
-                                            borderWidth: 1,
-                                            borderColor: 'rgba(117, 111, 111, 0.4)',
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        <View className='relative'>
-                                            <Ionicons
-                                                name="logo-gitlab"
-                                                size={28}
-                                                color="white"
-                                            />
-                                        </View>
-
-                                    </View>
+                                        <LinearGradient
+                                            colors={['#6d28d9', '#7c3aed']}
+                                            start={{ x: 0, y: 0 }}
+                                            end={{ x: 1, y: 1 }}
+                                            style={{
+                                                height: 76,
+                                                width: 76,
+                                                borderRadius: 38,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                borderWidth: 1,
+                                                borderColor: 'rgba(124,58,237,0.12)'
+                                            }}>
+                                            <Ionicons name="logo-gitlab" size={28} color="white" />
+                                        </LinearGradient>
                                 </BlurView>
                             </View>
                         ),

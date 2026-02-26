@@ -11,6 +11,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import './global.css';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+import { DMSans_400Regular, DMSans_500Medium, DMSans_700Bold } from '@expo-google-fonts/dm-sans';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const tokenCache = {
@@ -75,6 +76,9 @@ export default function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_700Bold,
   });
 
   useEffect(() => {
@@ -82,11 +86,11 @@ export default function RootLayout() {
       // @ts-ignore
       Text.defaultProps = Text.defaultProps || {};
       // @ts-ignore
-      Text.defaultProps.style = { ...Text.defaultProps.style, fontFamily: 'Inter_400Regular' };
+      Text.defaultProps.style = { ...Text.defaultProps.style, fontFamily: 'DMSans_400Regular' };
       // @ts-ignore
       TextInput.defaultProps = TextInput.defaultProps || {};
       // @ts-ignore
-      TextInput.defaultProps.style = { ...TextInput.defaultProps.style, fontFamily: 'Inter_400Regular' };
+      TextInput.defaultProps.style = { ...TextInput.defaultProps.style, fontFamily: 'DMSans_400Regular' };
     }
   }, [fontsLoaded]);
 
