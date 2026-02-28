@@ -95,8 +95,10 @@ export async function runPipeline({
 
         // ── 3-attempt fix loop ────────────────────────────────────────────
         currentStage = 'validation';
-        let codeToFix = rawFinalCode;
-        lastCode = rawFinalCode;
+        // Strip markdown fences the glue AI sometimes wraps output in
+        const stripFences = (s: string) => s.replace(/^```[\w]*\n?/m, '').replace(/```\s*$/m, '').trim();
+        let codeToFix = stripFences(rawFinalCode);
+        lastCode = codeToFix;
         const collectedErrors: string[] = [];
 
         for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
@@ -121,18 +123,20 @@ export async function runPipeline({
             collectedErrors.push(`Attempt ${attempt}/${MAX_FIX_ATTEMPTS}: ${errorMsg}`);
             console.warn(`⚠️ Validation failed (attempt ${attempt}/${MAX_FIX_ATTEMPTS}):`, errorMsg);
 
-            if (attempt === MAX_FIX_ATTEMPTS) break; // no more retries
+            if (attempt === MAX_FIX_ATTEMPTS) break; // no more retries — exhausted
 
-            const isFinalAttempt = attempt === MAX_FIX_ATTEMPTS - 1;
-            const finalAttemptInstruction = isFinalAttempt
+            // Final fix call gets a "simplify" instruction
+            const isLastFixCall = attempt === MAX_FIX_ATTEMPTS - 1;
+            const finalAttemptInstruction = isLastFixCall
                 ? `\n\nThis is your final attempt.\nYou must simplify the code.\nRemove optional features.\nFavor correctness over completeness.`
                 : '';
 
-            const { text: fixedCode } = await generateText({
+            const { text: fixedRaw } = await generateText({
                 model: azure(process.env.AZURE_OPENAI_DEPLOYMENT_NAME!),
-                system: `You are a code fixer. Output ONLY the corrected JavaScript code. No markdown. No explanation.`,
-                prompt: `This React Native code has an error (attempt ${attempt}/${MAX_FIX_ATTEMPTS}):\n\nERROR: ${errorMsg}\n\nFix ONLY that error. Output the entire corrected file.${finalAttemptInstruction}\n\nCODE:\n${codeToFix}`,
+                system: `You are a code fixer. Output ONLY the corrected JavaScript code. No markdown fences. No explanation.`,
+                prompt: `This React Native code has an error (attempt ${attempt}/${MAX_FIX_ATTEMPTS}):\n\nERROR: ${errorMsg}\n\nFix ONLY that error. Output the entire corrected file with NO markdown.${finalAttemptInstruction}\n\nCODE:\n${codeToFix}`,
             });
+            const fixedCode = stripFences(fixedRaw);
 
             codeToFix = fixedCode;
             lastCode = fixedCode;
