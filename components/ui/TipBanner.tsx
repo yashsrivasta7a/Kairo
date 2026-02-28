@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { View, Animated } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useColorScheme } from 'nativewind'
 
 const TIPS = [
   'Build like you\'re funded.',
@@ -10,6 +11,8 @@ const TIPS = [
 ]
 
 export default function TipBanner() {
+  const { colorScheme } = useColorScheme()
+  const dk = colorScheme === 'dark'
   const [i, setI] = useState(0)
   const opacity = useRef(new Animated.Value(1)).current
   const pulse = useRef(new Animated.Value(1)).current
@@ -46,7 +49,7 @@ export default function TipBanner() {
         elevation: 8,
       }}>
       <LinearGradient
-        colors={['#ede0ff', '#e4d4ff', '#dac7ff']}
+        colors={dk ? ['#1e0a3c', '#2a1155', '#1e0a3c'] : ['#ede0ff', '#e4d4ff', '#dac7ff']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={{
@@ -57,7 +60,7 @@ export default function TipBanner() {
           alignItems: 'center',
           gap: 10,
           borderWidth: 1,
-          borderColor: 'rgba(124,58,237,0.2)',
+          borderColor: dk ? 'rgba(124,58,237,0.35)' : 'rgba(124,58,237,0.2)',
           width: '100%'
         }}>
         {/* Pulsing dot */}
@@ -79,7 +82,7 @@ export default function TipBanner() {
           style={{
             fontFamily: 'DMSans_500Medium',
             fontSize: 13.5,
-            color: '#3b0764',
+            color: dk ? '#d8b4fe' : '#3b0764',
             opacity,
             letterSpacing: -0.1,
           }}>

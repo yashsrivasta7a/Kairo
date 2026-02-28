@@ -1,19 +1,30 @@
-import 'react-native-reanimated'
-import 'react-native-gesture-handler'
-import '../utils/polyfills'
+import 'react-native-reanimated';
+import 'react-native-gesture-handler';
+import '../utils/polyfills';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect } from 'react';
 import { ActivityIndicator, View, Text, TextInput } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import './global.css';
-import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
-import { DMSans_400Regular, DMSans_500Medium, DMSans_700Bold } from '@expo-google-fonts/dm-sans';
+import {
+  useFonts,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
+import {
+  DMSans_400Regular,
+  DMSans_500Medium,
+  DMSans_600SemiBold,
+  DMSans_700Bold,
+} from '@expo-google-fonts/dm-sans';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { ThemeProvider } from '../constants/ThemeContext';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 const tokenCache = {
   async getToken(key: string) {
     try {
@@ -25,7 +36,7 @@ const tokenCache = {
   async saveToken(key: string, value: string) {
     try {
       return SecureStore.setItemAsync(key, value);
-    } catch { }
+    } catch {}
   },
 };
 
@@ -48,7 +59,13 @@ function RootLayoutNav() {
 
   if (!isLoaded || (isSignedIn && segments[0] === '(auth)')) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#000',
+        }}>
         <ActivityIndicator size="large" color="#fff" />
         <StatusBar hidden />
       </View>
@@ -78,6 +95,7 @@ export default function RootLayout() {
     Inter_700Bold,
     DMSans_400Regular,
     DMSans_500Medium,
+    DMSans_600SemiBold,
     DMSans_700Bold,
   });
 
@@ -90,32 +108,33 @@ export default function RootLayout() {
       // @ts-ignore
       TextInput.defaultProps = TextInput.defaultProps || {};
       // @ts-ignore
-      TextInput.defaultProps.style = { ...TextInput.defaultProps.style, fontFamily: 'DMSans_400Regular' };
+      TextInput.defaultProps.style = {
+        ...TextInput.defaultProps.style,
+        fontFamily: 'DMSans_400Regular',
+      };
     }
   }, [fontsLoaded]);
 
   if (!fontsLoaded) {
     return null;
   }
-  
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!
+
+  const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
   if (!publishableKey) {
-    throw new Error('Add EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY to your .env file')
+    throw new Error('Add EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY to your .env file');
   }
 
-
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <BottomSheetModalProvider>
-        <QueryClientProvider client={queryClient}>
-          <ClerkProvider
-            publishableKey={publishableKey}
-            tokenCache={tokenCache}
-          >
-            <RootLayoutNav />
-          </ClerkProvider>
-        </QueryClientProvider>
-      </BottomSheetModalProvider>
+    <GestureHandlerRootView style={{ flex: 2 }}>
+      <ThemeProvider>
+        <BottomSheetModalProvider>
+          <QueryClientProvider client={queryClient}>
+            <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+              <RootLayoutNav />
+            </ClerkProvider>
+          </QueryClientProvider>
+        </BottomSheetModalProvider>
+      </ThemeProvider>{' '}
     </GestureHandlerRootView>
   );
 }

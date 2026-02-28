@@ -22,6 +22,7 @@ const _schema = i.schema({
       status: i.string().optional(),
       createdAt: i.number(),
       updatedAt: i.number(),
+      stage: i.string().optional(),
     }),
     favorites: i.entity({
       createdAt: i.number()

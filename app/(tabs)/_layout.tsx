@@ -3,8 +3,29 @@ import { BlurView } from 'expo-blur'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Tabs, useRouter } from 'expo-router'
 import { View } from 'react-native'
+import { useColorScheme } from 'nativewind'
 import { useCreateModalStore } from '../../lib/store'
 import Create from './create'
+
+function TabBarBg() {
+    const { colorScheme } = useColorScheme();
+    const dk = colorScheme === 'dark';
+    return (
+        <LinearGradient
+            colors={dk
+                ? ['rgba(13,3,31,0.85)', 'rgba(43,17,87,0.8)']
+                : ['rgba(255,255,255,0.82)', 'rgba(244,236,255,0.75)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ flex: 1, borderRadius: 50, overflow: 'hidden' }}>
+            <BlurView
+                intensity={65}
+                tint={dk ? 'dark' : 'light'}
+                style={{ flex: 1 }}
+            />
+        </LinearGradient>
+    );
+}
 
 
 export default function TabsLayout() {
@@ -34,23 +55,7 @@ export default function TabsLayout() {
                             shadowRadius: 12,
                             shadowOffset: { width: 0, height: 6 },
                         },
-                        tabBarBackground: () => (
-                            <LinearGradient
-                                colors={[ 'rgba(255,255,255,0.7)', 'rgba(244,236,255,0.6)' ]}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                                style={{
-                                    flex: 1,
-                                    borderRadius: 50,
-                                    overflow: 'hidden',
-                                }}>
-                                <BlurView
-                                    intensity={65}
-                                    tint="light"
-                                    style={{ flex: 1 }}
-                                />
-                            </LinearGradient>
-                        ),
+                    tabBarBackground: () => <TabBarBg />,
                         tabBarActiveTintColor: '#7c3aed',
                         tabBarInactiveTintColor: '#a1a1aa',
                 }}

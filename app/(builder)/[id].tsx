@@ -15,6 +15,7 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useColorScheme } from 'nativewind';
 
 import DropDown from 'components/DropDown';
 import UserProfile from 'components/userProfile';
@@ -28,8 +29,20 @@ export default function BuildScreen() {
   const { builds, options, userId } = useBuilds();
   const router = useRouter();
   const [prompt, setPrompt] = useState('');
+  const [lastPrompt, setLastPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const { colorScheme } = useColorScheme();
+  const dk = colorScheme === 'dark';
+  const lt = colorScheme === 'light';
+
+  const stageLabel: Record<string, string> = {
+    specs: '🧠 Planning your app...',
+    screens: '✏️ Writing screens...',
+    gluing: '🔧 Putting it together...',
+    completed: '✅ Ready',
+    failed: '❌ Failed',
+  };
 
   useEffect(() => {
     if (!routeBuildId && options.length) {
@@ -42,21 +55,34 @@ export default function BuildScreen() {
   const handleGenerate = async () => {
     if (!prompt || !routeBuildId) return;
     setIsGenerating(true);
+    setLastPrompt(prompt); // save before clearing so retry can reuse it
 
     try {
-      const res = await fetch('/api/generate', {
+      await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, userId, buildId: routeBuildId }),
       });
-
       setPrompt('');
-      if (res.ok) {
-        const data = await res.json();
-        router.push(`/(builder)/${data.buildId}`);
-      }
     } catch (err) {
-      new Error('Generation failed');
+      console.error('Generation failed', err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleRetry = async () => {
+    if (!lastPrompt || !routeBuildId) return;
+    setIsGenerating(true);
+
+    try {
+      await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: lastPrompt, userId, buildId: routeBuildId }),
+      });
+    } catch (err) {
+      console.error('Retry failed', err);
     } finally {
       setIsGenerating(false);
     }
@@ -64,14 +90,16 @@ export default function BuildScreen() {
 
   return (
     <LinearGradient
-      colors={['#0d031fff', '#000000']}
-      start={{ x: 0.09, y: 0.09 }}
-      end={{ x: 1, y: 1 }}
+      colors={dk ? ['#0d031f', '#000000', '#2b1157'] : ['#f5f3ff', '#ffffff', '#ede9fe']}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
       style={{ flex: 1 }}>
       <SafeAreaView className="flex-1 px-4">
         <View className="flex-row items-center justify-between">
           <View className="mr-3 flex-1">
-            <Text className="text-xs font-medium uppercase tracking-wider text-white/70">
+            <Text
+              style={{ color: dk ? 'rgba(255,255,255,0.7)' : '#7c3aed' }}
+              className="text-xs font-medium uppercase tracking-wider">
               Builds
             </Text>
             <DropDown
@@ -82,50 +110,70 @@ export default function BuildScreen() {
           </View>
           <UserProfile />
         </View>
-        <KeyboardAvoidingView
-          behavior="padding"
-          className="flex-1 ">
+        <KeyboardAvoidingView behavior="padding" className="flex-1 ">
           <View className="flex-1 gap-0">
             {currentBuild && (
-              <View className="flex-1 mt-3 rounded-xl border border-white/10 bg-white/5">
-                <View className="flex-row items-center justify-between border-b border-white/10 px-4 py-2">
-                  <Text className="text-xs font-semibold uppercase tracking-wider text-white/60">
+              <View
+                style={{
+                  flex: 1,
+                  marginTop: 12,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: dk ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+                  backgroundColor: dk ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    borderBottomWidth: 1,
+                    borderBottomColor: dk ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)',
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                  }}>
+                  <Text
+                    style={{ color: dk ? 'rgba(255,255,255,0.6)' : '#7c3aed' }}
+                    className="text-xs font-semibold uppercase tracking-wider">
                     Generated Code
                   </Text>
                   <View className="flex-row items-center gap-2">
-                    {currentBuild.streaming === 'true' && (
-                      <View className="flex-row items-center gap-1">
-                        <ActivityIndicator size="small" color="#8B5CF6" />
-                        <Text className="text-xs text-purple-400">Streaming...</Text>
-                      </View>
+
+                    {currentBuild.status === 'failed' && (
+                      <TouchableOpacity
+                        onPress={handleRetry}
+                        className="rounded-lg bg-red-900/50 px-2 py-1">
+                        <Text className="text-xs text-red-400">↺ Retry</Text>
+                      </TouchableOpacity>
                     )}
+
 
                     <TouchableOpacity
                       onPress={() => setShowPreview(true)}
-                      className="rounded-lg px-2 py-1"
+                      className="rounded-lg px-2 py-1 bg-[#fb9262ff]"
                       activeOpacity={0.8}>
-                      <Text className="text-xs text-white">Preview</Text>
+                      <Text style={{ color: dk ? 'white' : '#3b0764' }} className="text-xs">
+                        Preview
+                      </Text>
                     </TouchableOpacity>
                     <View
-                      className={`rounded-full px-2 py-0.5 ${
-                        currentBuild.status === 'completed'
-                          ? 'bg-green-900/50'
-                          : currentBuild.status === 'failed'
-                            ? 'bg-red-900/50'
-                            : currentBuild.status === 'generating'
-                              ? 'bg-purple-900/50'
-                              : 'bg-gray-800'
-                      }`}>
-                      <Text
-                        className={`text-xs ${
-                          currentBuild.status === 'completed'
-                            ? 'text-green-400'
-                            : currentBuild.status === 'failed'
-                              ? 'text-red-400'
-                              : currentBuild.status === 'generating'
-                                ? 'text-purple-400'
-                                : 'text-gray-400'
+                      className={`rounded-full px-2 py-0.5 ${currentBuild.status === 'completed'
+                        ? 'bg-green-900/50'
+                        : currentBuild.status === 'failed'
+                          ? 'bg-red-900/50'
+                          : currentBuild.status === 'generating'
+                            ? 'bg-purple-900/50'
+                            : 'bg-gray-800'
                         }`}>
+                      <Text
+                        className={`text-xs ${currentBuild.status === 'completed'
+                          ? 'text-green-400'
+                          : currentBuild.status === 'failed'
+                            ? 'text-red-400'
+                            : currentBuild.status === 'generating'
+                              ? 'text-purple-400'
+                              : 'text-gray-400'
+                          }`}>
                         {currentBuild.status || 'idle'}
                       </Text>
                     </View>
@@ -133,22 +181,38 @@ export default function BuildScreen() {
                 </View>
                 <ScrollView className="flex-1 p-4">
                   {currentBuild.code ? (
-                    <Text className="font-mono text-xs leading-5 text-green-300">
+                    <Text
+                      style={{ color: dk ? '#86efac' : '#15803d' }}
+                      className="font-mono text-xs leading-5">
                       {currentBuild.code}
                     </Text>
                   ) : (
-                    <Text className="text-sm text-gray-500">
-                      No code generated yet. Enter a prompt and hit generate.
-                    </Text>
+                    currentBuild.status === 'generating' ? (
+                      <View className="flex-row items-center gap-1">
+                        <ActivityIndicator size="small" color="#8B5CF6" />
+                        <Text className="text-xs text-purple-400">
+                          {stageLabel[currentBuild.stage ?? ''] || 'Generating...'}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text style={{ color: dk ? '#6b7280' : '#9ca3af' }} className="text-sm">
+                        No code generated yet. Enter a prompt and hit generate.
+                      </Text>
+                    )
                   )}
                 </ScrollView>
               </View>
             )}
             <View className="relative mt-2">
               <TextInput
-                className="min-h-[80px] w-full rounded-xl border border-white/10 bg-white/10 px-4 py-4 pr-16 text-white"
+                style={{
+                  borderColor: dk ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                  backgroundColor: dk ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.04)',
+                  color: dk ? 'white' : '#1a1a2e',
+                }}
+                className="min-h-[80px] w-full rounded-xl border px-4 py-4 pr-16"
                 placeholder="Describe your app..."
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={dk ? '#9ca3af' : '#9ca3af'}
                 value={prompt}
                 multiline
                 onChangeText={setPrompt}
@@ -156,9 +220,8 @@ export default function BuildScreen() {
               />
 
               <TouchableOpacity
-                className={`absolute right-4 bottom-4 rounded-full p-4 ${
-                  isGenerating ? 'bg-[#6D28D9]/60' : 'bg-[#6D28D9]'
-                }`}
+                className={`absolute bottom-4 right-4 rounded-full p-4 ${isGenerating ? 'bg-[#6D28D9]/60' : 'bg-[#6D28D9]'
+                  }`}
                 onPress={handleGenerate}
                 disabled={isGenerating}
                 activeOpacity={0.8}>
@@ -175,32 +238,63 @@ export default function BuildScreen() {
               visible={showPreview}
               animationType="slide"
               onRequestClose={() => setShowPreview(false)}>
-              <SafeAreaView style={{ flex: 1 }}>
-              <View className="flex-row items-center justify-between px-4 py-3">
-                <Text className="text-sm font-semibold text-black">Preview</Text>
-                <Pressable onPress={() => setShowPreview(false)}>
-                <Text className="text-sm text-black">Close</Text>
-                </Pressable>
-              </View>
-              <View style={{ flex: 1 }}>
-                {currentBuild?.status === 'completed' && currentBuild?.instantId ? (
-                  <BuildUi code={currentBuild.code} instantAppId={currentBuild.instantId} />
-                ) : (
-                  <View className="flex-1 items-center justify-center px-4">
-                  <Ionicons name="code-slash-outline" size={48} color="#9ca3af" />
-                  <Text className="mt-4 text-center text-base text-gray-600">
-                    Code isn't generated yet
+              <SafeAreaView style={{ flex: 1, backgroundColor: dk ? '#09090f' : '#f5f3ff' }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: dk ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
+                  }}>
+                  <Text
+                    style={{ color: dk ? 'white' : '#1a1a2e' }}
+                    className="text-sm font-semibold">
+                    Preview
                   </Text>
-                  <Text className="mt-2 text-center text-sm text-gray-400">
-                    Please wait for the generation to complete
-                  </Text>
-                  </View>
-                )}
-              </View>
+                  <Pressable onPress={() => setShowPreview(false)}>
+                    <Text style={{ color: dk ? '#a78bfa' : '#7c3aed' }} className="text-sm">
+                      Close
+                    </Text>
+                  </Pressable>
+                </View>
+                <View style={{ flex: 1 }}>
+                  {currentBuild?.status === 'completed' && currentBuild?.instantId ? (
+                    <BuildUi code={currentBuild.code} instantAppId={currentBuild.instantId} />
+                  ) : (
+                    <View className="flex-1 items-center justify-center px-4">
+                      <Ionicons
+                        name="code-slash-outline"
+                        size={48}
+                        color={dk ? '#9ca3af' : '#6b7280'}
+                      />
+                      <Text
+                        style={{ color: dk ? '#6b7280' : '#4b5563' }}
+                        className="mt-4 text-center text-base">
+                        Code isn't generated yet
+                      </Text>
+                      <Text
+                        style={{ color: dk ? '#9ca3af' : '#6b7280' }}
+                        className="mt-2 text-center text-sm">
+                        Please wait for the generation to complete
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
               </SafeAreaView>
             </Modal>
+
           </View>
+          <Text
+            numberOfLines={3}
+            style={{ color: dk ? '#9ca3af' : '#9ca3af' }}
+            className="mt-2 text-center align-center text-xs text-">
+            Kairo works best with short, focused prompts.  </Text>
         </KeyboardAvoidingView>
+
       </SafeAreaView>
     </LinearGradient>
   );

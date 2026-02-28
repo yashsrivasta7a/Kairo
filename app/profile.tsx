@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useColorScheme } from 'nativewind';
 
 const GlassCard = ({
   children,
@@ -23,45 +24,54 @@ const GlassCard = ({
 }: {
   children: React.ReactNode;
   className?: string;
-}) => (
-  <BlurView
-    intensity={55}
-    experimentalBlurMethod="dimezisBlurView"
-    tint="dark"
-    className={`overflow-hidden rounded-2xl border border-white/[0.08] ${cn ?? ''}`}>
-    {children}
-  </BlurView>
-);
+}) => {
+  const { colorScheme } = useColorScheme();
+  const dk = colorScheme === 'dark';
+  return (
+    <BlurView
+      intensity={55}
+      tint={dk ? 'dark' : 'light'}
+      className={`overflow-hidden rounded-2xl border ${dk ? 'border-white/[0.08]' : 'border-black/[0.06]'} ${cn ?? ''}`}>
+      {children}
+    </BlurView>
+  );
+};
 
 const OptionRow = ({
   icon,
   label,
   value,
   onPress,
-  color = '#fff',
+  color,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value?: string;
   onPress?: () => void;
   color?: string;
-}) => (
-  <TouchableOpacity
-    onPress={onPress}
-    activeOpacity={0.7}
-    className="flex-row items-center py-3">
-    <View className="h-[34px] w-[34px] items-center justify-center rounded-full bg-[rgba(109,40,217,0.25)]">
-      <Ionicons name={icon} size={18} color={color} />
-    </View>
-    <View className="ml-3 flex-1">
-      <Text style={{ color }} className="text-sm font-medium">
-        {label}
-      </Text>
-      {value ? <Text className="mt-0.5 text-xs text-gray-500">{value}</Text> : null}
-    </View>
-    <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.3)" />
-  </TouchableOpacity>
-);
+}) => {
+  const { colorScheme } = useColorScheme();
+  const dk = colorScheme === 'dark';
+  const resolvedColor = color ?? (dk ? '#ffffff' : '#1a1a2e');
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.7} className="flex-row items-center py-3">
+      <View className="h-[34px] w-[34px] items-center justify-center rounded-full bg-[rgba(109,40,217,0.25)]">
+        <Ionicons name={icon} size={18} color={resolvedColor} />
+      </View>
+      <View className="ml-3 flex-1">
+        <Text style={{ color: resolvedColor }} className="text-sm font-medium">
+          {label}
+        </Text>
+        {value ? (
+          <Text style={{ color: dk ? '#6b7280' : '#9ca3af' }} className="mt-0.5 text-xs">
+            {value}
+          </Text>
+        ) : null}
+      </View>
+      <Ionicons name="chevron-forward" size={16} color={dk ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)'} />
+    </TouchableOpacity>
+  );
+};
 
 const ProfilePage = () => {
   const { user, isLoaded } = useUser();
@@ -73,6 +83,8 @@ const ProfilePage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const { colorScheme } = useColorScheme();
+  const dk = colorScheme === 'dark';
 
   useEffect(() => {
     if (user) {
@@ -166,9 +178,9 @@ const ProfilePage = () => {
 
   return (
     <LinearGradient
-      colors={['#0d031f', '#000000']}
-      start={{ x: 0.09, y: 0.09 }}
-      end={{ x: 1, y: 1 }}
+      colors={dk ? ['#0d031f', '#000000', '#2b1157'] : ['#f5f3ff', '#ffffff', '#ede9fe']}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
       style={{ flex: 1 }}>
       <SafeAreaView className="flex-1">
         <View className="flex-row items-center justify-between px-5 py-3">
@@ -176,9 +188,9 @@ const ProfilePage = () => {
             onPress={() => router.back()}
             className="p-2"
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Ionicons name="arrow-back" size={22} color="white" />
+            <Ionicons name="arrow-back" size={22} color={dk ? 'white' : '#3b0764'} />
           </TouchableOpacity>
-          <Text className="flex-1 text-center text-lg font-bold text-white">Profile</Text>
+          <Text style={{ color: dk ? 'white' : '#3b0764' }} className="flex-1 text-center text-lg font-bold">Profile</Text>
           <TouchableOpacity
             className="rounded-lg px-4 py-2"
             style={{
@@ -219,10 +231,10 @@ const ProfilePage = () => {
               </View>
             </TouchableOpacity>
 
-            <Text className="mt-4 text-xl font-bold text-white">
+            <Text style={{ color: dk ? 'white' : '#3b0764' }} className="mt-4 text-xl font-bold">
               {user?.fullName || `${firstName} ${lastName}`.trim() || 'Your Name'}
             </Text>
-            <Text className="mt-1 text-sm text-gray-400">{email}</Text>
+            <Text style={{ color: dk ? '#9ca3af' : '#6b7280' }} className="mt-1 text-sm">{email}</Text>
             {createdAt && (
               <Text className="mt-1 text-xs text-gray-600">Member since {createdAt}</Text>
             )}
@@ -248,21 +260,31 @@ const ProfilePage = () => {
           </Text>
           <GlassCard>
             <View className="px-4 pb-2 pt-4">
-              <Text className="mb-1 text-xs font-medium text-gray-400">First Name</Text>
+              <Text style={{ color: dk ? '#9ca3af' : '#6b7280' }} className="mb-1 text-xs font-medium">First Name</Text>
               <TextInput
-                className="mb-3 w-full rounded-xl border border-white/[0.06] bg-white/[0.06] px-4 py-3 text-white"
+                style={{
+                  borderColor: dk ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
+                  backgroundColor: dk ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                  color: dk ? '#ffffff' : '#1a1a2e',
+                }}
+                className="mb-3 w-full rounded-xl border px-4 py-3"
                 placeholder="First name"
-                placeholderTextColor="#555"
+                placeholderTextColor={dk ? '#555' : '#9ca3af'}
                 value={firstName}
                 onChangeText={setFirstName}
                 editable={!isSaving}
               />
 
-              <Text className="mb-1 text-xs font-medium text-gray-400">Last Name</Text>
+              <Text style={{ color: dk ? '#9ca3af' : '#6b7280' }} className="mb-1 text-xs font-medium">Last Name</Text>
               <TextInput
-                className="mb-1 w-full rounded-xl border border-white/[0.06] bg-white/[0.06] px-4 py-3 text-white"
+                style={{
+                  borderColor: dk ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
+                  backgroundColor: dk ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                  color: dk ? '#ffffff' : '#1a1a2e',
+                }}
+                className="mb-1 w-full rounded-xl border px-4 py-3"
                 placeholder="Last name"
-                placeholderTextColor="#555"
+                placeholderTextColor={dk ? '#555' : '#9ca3af'}
                 value={lastName}
                 onChangeText={setLastName}
                 editable={!isSaving}

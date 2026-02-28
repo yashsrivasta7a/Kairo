@@ -1,6 +1,6 @@
 import { id } from "@instantdb/admin";
 import { adminDB } from "lib/instant/adminDb";
-import { generateAndStreamCode } from "lib/ai/codeGenerator";
+import { runPipeline } from "lib/ai/codeGenerator";
 
 
 async function getOrCreateInstantUser(
@@ -8,12 +8,12 @@ async function getOrCreateInstantUser(
     extra?: { email?: string; }
 ): Promise<string> {
     const { $users } = await adminDB.query({ $users: { $: { where: { clerkId } } } });
-    
+
     if ($users && $users.length > 0) {
         return $users[0].id;
     }
-    
-    
+
+
     const newUserId = id();
     await adminDB.transact([
         adminDB.tx.$users[newUserId].update({
@@ -22,7 +22,7 @@ async function getOrCreateInstantUser(
             createdAt: Date.now(),
         }),
     ]);
-    
+
     console.log(newUserId);
     return newUserId;
 }
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
             }),
         ]);
 
-        generateAndStreamCode({ buildId, prompt, userId: instantUserId }).catch(err => {
+        runPipeline({ buildId, prompt, userId: instantUserId }).catch(err => {
             console.error("Background Generation Failed:", err);
         });
         return Response.json({ buildId });
