@@ -80,6 +80,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(builder)" />
         <Stack.Screen name="profile" />
+        <Stack.Screen name="apps" />
       </Stack>
     </>
   );

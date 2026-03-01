@@ -501,7 +501,7 @@ export default function HomeScreen() {
                 marginBottom: 4,
               }}>
               <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 14, color: dk ? '#d8b4fe' : '#3b0764' }}>Recent Apps</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/apps')}>
                 <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: dk ? '#a78bfa' : '#7c3aed' }}>See all</Text>
               </TouchableOpacity>
             </View>

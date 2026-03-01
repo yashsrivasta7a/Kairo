@@ -138,7 +138,6 @@ export default function BuildScreen() {
                     Generated Code
                   </Text>
                   <View className="flex-row items-center gap-2">
-
                     {currentBuild.status === 'failed' && (
                       <TouchableOpacity
                         onPress={handleRetry}
@@ -147,33 +146,34 @@ export default function BuildScreen() {
                       </TouchableOpacity>
                     )}
 
-
                     <TouchableOpacity
                       onPress={() => setShowPreview(true)}
-                      className="rounded-lg px-2 py-1 bg-[#fb9262ff]"
+                      className="rounded-lg bg-[#fb9262ff] px-2 py-1"
                       activeOpacity={0.8}>
                       <Text style={{ color: dk ? 'white' : '#3b0764' }} className="text-xs">
                         Preview
                       </Text>
                     </TouchableOpacity>
                     <View
-                      className={`rounded-full px-2 py-0.5 ${currentBuild.status === 'completed'
-                        ? 'bg-green-900/50'
-                        : currentBuild.status === 'failed'
-                          ? 'bg-red-900/50'
-                          : currentBuild.status === 'generating'
-                            ? 'bg-purple-900/50'
-                            : 'bg-gray-800'
-                        }`}>
-                      <Text
-                        className={`text-xs ${currentBuild.status === 'completed'
-                          ? 'text-green-400'
+                      className={`rounded-full px-2 py-0.5 ${
+                        currentBuild.status === 'completed'
+                          ? 'bg-green-900/50'
                           : currentBuild.status === 'failed'
-                            ? 'text-red-400'
+                            ? 'bg-red-900/50'
                             : currentBuild.status === 'generating'
-                              ? 'text-purple-400'
-                              : 'text-gray-400'
-                          }`}>
+                              ? 'bg-purple-900/50'
+                              : 'bg-gray-800'
+                      }`}>
+                      <Text
+                        className={`text-xs ${
+                          currentBuild.status === 'completed'
+                            ? 'text-green-400'
+                            : currentBuild.status === 'failed'
+                              ? 'text-red-400'
+                              : currentBuild.status === 'generating'
+                                ? 'text-purple-400'
+                                : 'text-gray-400'
+                        }`}>
                         {currentBuild.status || 'idle'}
                       </Text>
                     </View>
@@ -186,19 +186,17 @@ export default function BuildScreen() {
                       className="font-mono text-xs leading-5">
                       {currentBuild.code}
                     </Text>
-                  ) : (
-                    currentBuild.status === 'generating' ? (
-                      <View className="flex-row items-center gap-1">
-                        <ActivityIndicator size="small" color="#8B5CF6" />
-                        <Text className="text-xs text-purple-400">
-                          {stageLabel[currentBuild.stage ?? ''] || 'Generating...'}
-                        </Text>
-                      </View>
-                    ) : (
-                      <Text style={{ color: dk ? '#6b7280' : '#9ca3af' }} className="text-sm">
-                        No code generated yet. Enter a prompt and hit generate.
+                  ) : currentBuild.status === 'generating' ? (
+                    <View className="flex-row items-center gap-1">
+                      <ActivityIndicator size="small" color="#8B5CF6" />
+                      <Text className="text-xs text-purple-400">
+                        {stageLabel[currentBuild.stage ?? ''] || 'Generating...'}
                       </Text>
-                    )
+                    </View>
+                  ) : (
+                    <Text style={{ color: dk ? '#6b7280' : '#9ca3af' }} className="text-sm">
+                      No code generated yet. Enter a prompt and hit generate.
+                    </Text>
                   )}
                 </ScrollView>
               </View>
@@ -220,8 +218,9 @@ export default function BuildScreen() {
               />
 
               <TouchableOpacity
-                className={`absolute bottom-4 right-4 rounded-full p-4 ${isGenerating ? 'bg-[#6D28D9]/60' : 'bg-[#6D28D9]'
-                  }`}
+                className={`absolute bottom-4 right-4 rounded-full p-4 ${
+                  isGenerating ? 'bg-[#6D28D9]/60' : 'bg-[#6D28D9]'
+                }`}
                 onPress={handleGenerate}
                 disabled={isGenerating}
                 activeOpacity={0.8}>
@@ -273,7 +272,7 @@ export default function BuildScreen() {
                       <Text
                         style={{ color: dk ? '#6b7280' : '#4b5563' }}
                         className="mt-4 text-center text-base">
-                        Code isn't generated yet
+                        {`Code isn't generated yet`}
                       </Text>
                       <Text
                         style={{ color: dk ? '#9ca3af' : '#6b7280' }}
@@ -283,18 +282,16 @@ export default function BuildScreen() {
                     </View>
                   )}
                 </View>
-
               </SafeAreaView>
             </Modal>
-
           </View>
           <Text
             numberOfLines={3}
             style={{ color: dk ? '#9ca3af' : '#9ca3af' }}
-            className="mt-2 text-center align-center text-xs text-">
-            Kairo works best with short, focused prompts.  </Text>
+            className="align-center text- mt-2 text-center text-xs">
+            Kairo works best with short, focused prompts.{' '}
+          </Text>
         </KeyboardAvoidingView>
-
       </SafeAreaView>
     </LinearGradient>
   );
