@@ -32,6 +32,8 @@ export default function BuildScreen() {
   const [lastPrompt, setLastPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [isCheckingPreview, setIsCheckingPreview] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const { colorScheme } = useColorScheme();
   const dk = colorScheme === 'dark';
   const lt = colorScheme === 'light';
@@ -85,6 +87,40 @@ export default function BuildScreen() {
       console.error('Retry failed', err);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleOpenPreview = async () => {
+    if (!currentBuild?.id) return;
+    if (!currentBuild.code || !currentBuild.code.trim()) return;
+
+    setPreviewError(null);
+    setIsCheckingPreview(true);
+
+    try {
+      const res = await fetch('/api/runtime-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ buildId: currentBuild.id }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.ok) {
+        setShowPreview(true);
+      } else {
+        setPreviewError(
+          data?.error ||
+          'Preview failed preflight runtime validation. Please try regenerating this build.',
+        );
+      }
+    } catch (err) {
+      console.error('Preview runtime check failed', err);
+      setPreviewError(
+        'Preview preflight check failed due to a network or server error. Please try again.',
+      );
+    } finally {
+      setIsCheckingPreview(false);
     }
   };
 
@@ -149,11 +185,12 @@ export default function BuildScreen() {
 
 
                     <TouchableOpacity
-                      onPress={() => setShowPreview(true)}
+                      onPress={handleOpenPreview}
                       className="rounded-lg px-2 py-1 bg-[#fb9262ff]"
+                      disabled={isCheckingPreview || !currentBuild.code}
                       activeOpacity={0.8}>
                       <Text style={{ color: dk ? 'white' : '#3b0764' }} className="text-xs">
-                        Preview
+                        {isCheckingPreview ? 'Checking…' : 'Preview'}
                       </Text>
                     </TouchableOpacity>
                     <View
@@ -199,6 +236,13 @@ export default function BuildScreen() {
                         No code generated yet. Enter a prompt and hit generate.
                       </Text>
                     )
+                  )}
+                  {previewError && (
+                    <View className="mt-3 rounded-md bg-red-900/40 p-2">
+                      <Text className="text-xs text-red-200">
+                        Preview preflight failed: {previewError}
+                      </Text>
+                    </View>
                   )}
                 </ScrollView>
               </View>

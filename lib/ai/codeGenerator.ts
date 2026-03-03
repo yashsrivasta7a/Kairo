@@ -1,6 +1,7 @@
 import { createAzure } from '@ai-sdk/azure';
 import { generateText } from 'ai';
 import { validateCode } from './validator';
+import { runtimeValidateCode } from './runtimeValidator';
 import { adminDB } from 'lib/instant/adminDb';
 import { getSpecPrompt, getScreenPrompt, getGluePrompt } from '../../utils/systemPromptV2';
 
@@ -103,9 +104,20 @@ export async function runPipeline({
 
         for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
             lastAttempt = attempt;
-            const validation = validateCode(codeToFix);
 
-            if (validation.valid) {
+            const validation = validateCode(codeToFix);
+            let errorMsg: string | null = null;
+
+            if (!validation.valid) {
+                errorMsg = validation.error ?? 'Unknown static validation error.';
+            } else {
+                const runtimeResult = runtimeValidateCode(codeToFix);
+                if (!runtimeResult.ok) {
+                    errorMsg = runtimeResult.error ?? 'Unknown runtime validation error.';
+                }
+            }
+
+            if (!errorMsg) {
                 // ✅ Code is good — save and exit
                 await adminDB.transact([
                     adminDB.tx.builds[buildId].update({
@@ -119,7 +131,6 @@ export async function runPipeline({
                 return;
             }
 
-            const errorMsg = validation.error!;
             collectedErrors.push(`Attempt ${attempt}/${MAX_FIX_ATTEMPTS}: ${errorMsg}`);
             console.warn(`⚠️ Validation failed (attempt ${attempt}/${MAX_FIX_ATTEMPTS}):`, errorMsg);
 
