@@ -135,7 +135,7 @@ export default function RootLayout() {
             </ClerkProvider>
           </QueryClientProvider>
         </BottomSheetModalProvider>
-      </ThemeProvider>{' '}
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }
