@@ -23,6 +23,7 @@ const _schema = i.schema({
       createdAt: i.number(),
       updatedAt: i.number(),
       stage: i.string().optional(),
+      public: i.boolean().indexed().optional(),
     }),
     favorites: i.entity({
       createdAt: i.number()

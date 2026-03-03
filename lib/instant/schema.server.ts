@@ -26,27 +26,27 @@ const _schema = i.schema({
       stage: i.string().optional(),
     }),
     favorites: i.entity({
-      createdAt: i.number()
-    })
+      createdAt: i.number(),
+    }),
   },
   links: {
     buildOwner: {
       forward: { on: 'builds', has: 'one', label: 'owner', required: true },
-      reverse: { on: '$users', has: 'many', label: 'builds' }
+      reverse: { on: '$users', has: 'many', label: 'builds' },
     },
     favoriteUser: {
       forward: { on: 'favorites', has: 'one', label: 'user', required: true },
-      reverse: { on: '$users', has: 'many', label: 'favorites' }
+      reverse: { on: '$users', has: 'many', label: 'favorites' },
     },
     favoriteBuild: {
       forward: { on: 'favorites', has: 'one', label: 'build', required: true },
-      reverse: { on: 'builds', has: 'many', label: 'favorites' }
-    }
-  }
+      reverse: { on: 'builds', has: 'many', label: 'favorites' },
+    },
+  },
 });
 
 type _AppSchema = typeof _schema;
-interface AppSchema extends _AppSchema { }
+interface AppSchema extends _AppSchema {}
 const schema: AppSchema = _schema;
 
 export type { AppSchema };

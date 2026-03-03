@@ -9,7 +9,7 @@ import {
   Modal,
   Pressable,
   KeyboardAvoidingView,
-  Platform,
+  Switch,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -34,7 +34,6 @@ export default function BuildScreen() {
   const [showPreview, setShowPreview] = useState(false);
   const { colorScheme } = useColorScheme();
   const dk = colorScheme === 'dark';
-  const lt = colorScheme === 'light';
 
   const stageLabel: Record<string, string> = {
     specs: '🧠 Planning your app...',
@@ -50,7 +49,51 @@ export default function BuildScreen() {
     }
   }, [routeBuildId, options, router]);
 
+  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
+  const [localPublic, setLocalPublic] = useState<boolean | null>(null);
+
   const currentBuild = builds.find((b: any) => b.id === routeBuildId);
+  const effectivePublic = currentBuild ? (localPublic ?? currentBuild.public) : false;
+
+  useEffect(() => {
+    // Reset local override when switching between builds
+    setLocalPublic(null);
+    setIsUpdatingVisibility(false);
+  }, [currentBuild?.id]);
+
+  const handleTogglePublic = async () => {
+    if (!currentBuild?.id || currentBuild.status !== 'completed' || isUpdatingVisibility) return;
+    if (!userId) return;
+
+    const nextValue = !effectivePublic;
+    // Optimistic update: flip immediately in the UI
+    setLocalPublic(nextValue);
+    setIsUpdatingVisibility(true);
+
+    try {
+      const res = await fetch('/api/toggle-public', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          buildId: currentBuild.id,
+          userId,
+          public: nextValue,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        console.error('Failed to toggle public visibility', body);
+        // Revert optimistically-updated value on failure
+        setLocalPublic(!!currentBuild.public);
+      }
+    } catch (err) {
+      console.error('Failed to toggle public visibility', err);
+      setLocalPublic(!!currentBuild.public);
+    } finally {
+      setIsUpdatingVisibility(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!prompt || !routeBuildId) return;
@@ -176,6 +219,33 @@ export default function BuildScreen() {
                         }`}>
                         {currentBuild.status || 'idle'}
                       </Text>
+                    </View>
+                    <View className="flex-row items-center gap-1 ml-1">
+                      <Ionicons
+                        name="globe-outline"
+                        size={14}
+                        color={
+                          effectivePublic
+                            ? dk
+                              ? '#a78bfa'
+                              : '#6d28d9'
+                            : dk
+                              ? 'rgba(148,163,184,0.8)'
+                              : 'rgba(148,163,184,0.9)'
+                        }
+                      />
+                      <Switch
+                        value={!!effectivePublic}
+                        onValueChange={handleTogglePublic}
+                        disabled={
+                          currentBuild.status !== 'completed' || isUpdatingVisibility
+                        }
+                        thumbColor={effectivePublic ? '#f9fafb' : '#e5e7eb'}
+                        trackColor={{
+                          false: dk ? 'rgba(31,41,55,0.9)' : 'rgba(209,213,219,1)',
+                          true: dk ? '#4c1d95' : '#7c3aed',
+                        }}
+                      />
                     </View>
                   </View>
                 </View>
