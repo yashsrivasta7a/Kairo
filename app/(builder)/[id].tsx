@@ -9,7 +9,7 @@ import {
   Modal,
   Pressable,
   KeyboardAvoidingView,
-  Platform,
+  Switch,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -34,7 +34,6 @@ export default function BuildScreen() {
   const [showPreview, setShowPreview] = useState(false);
   const { colorScheme } = useColorScheme();
   const dk = colorScheme === 'dark';
-  const lt = colorScheme === 'light';
 
   const stageLabel: Record<string, string> = {
     specs: '🧠 Planning your app...',
@@ -50,7 +49,51 @@ export default function BuildScreen() {
     }
   }, [routeBuildId, options, router]);
 
+  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
+  const [localPublic, setLocalPublic] = useState<boolean | null>(null);
+
   const currentBuild = builds.find((b: any) => b.id === routeBuildId);
+  const effectivePublic = currentBuild ? (localPublic ?? currentBuild.public) : false;
+
+  useEffect(() => {
+    // Reset local override when switching between builds
+    setLocalPublic(null);
+    setIsUpdatingVisibility(false);
+  }, [currentBuild?.id]);
+
+  const handleTogglePublic = async () => {
+    if (!currentBuild?.id || currentBuild.status !== 'completed' || isUpdatingVisibility) return;
+    if (!userId) return;
+
+    const nextValue = !effectivePublic;
+    // Optimistic update: flip immediately in the UI
+    setLocalPublic(nextValue);
+    setIsUpdatingVisibility(true);
+
+    try {
+      const res = await fetch('/api/toggle-public', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          buildId: currentBuild.id,
+          userId,
+          public: nextValue,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        console.error('Failed to toggle public visibility', body);
+        // Revert optimistically-updated value on failure
+        setLocalPublic(!!currentBuild.public);
+      }
+    } catch (err) {
+      console.error('Failed to toggle public visibility', err);
+      setLocalPublic(!!currentBuild.public);
+    } finally {
+      setIsUpdatingVisibility(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!prompt || !routeBuildId) return;
@@ -138,7 +181,6 @@ export default function BuildScreen() {
                     Generated Code
                   </Text>
                   <View className="flex-row items-center gap-2">
-
                     {currentBuild.status === 'failed' && (
                       <TouchableOpacity
                         onPress={handleRetry}
@@ -147,35 +189,63 @@ export default function BuildScreen() {
                       </TouchableOpacity>
                     )}
 
-
                     <TouchableOpacity
                       onPress={() => setShowPreview(true)}
-                      className="rounded-lg px-2 py-1 bg-[#fb9262ff]"
+                      className="rounded-lg bg-[#fb9262ff] px-2 py-1"
                       activeOpacity={0.8}>
                       <Text style={{ color: dk ? 'white' : '#3b0764' }} className="text-xs">
                         Preview
                       </Text>
                     </TouchableOpacity>
                     <View
-                      className={`rounded-full px-2 py-0.5 ${currentBuild.status === 'completed'
-                        ? 'bg-green-900/50'
-                        : currentBuild.status === 'failed'
-                          ? 'bg-red-900/50'
-                          : currentBuild.status === 'generating'
-                            ? 'bg-purple-900/50'
-                            : 'bg-gray-800'
-                        }`}>
-                      <Text
-                        className={`text-xs ${currentBuild.status === 'completed'
-                          ? 'text-green-400'
+                      className={`rounded-full px-2 py-0.5 ${
+                        currentBuild.status === 'completed'
+                          ? 'bg-green-900/50'
                           : currentBuild.status === 'failed'
-                            ? 'text-red-400'
+                            ? 'bg-red-900/50'
                             : currentBuild.status === 'generating'
-                              ? 'text-purple-400'
-                              : 'text-gray-400'
-                          }`}>
+                              ? 'bg-purple-900/50'
+                              : 'bg-gray-800'
+                      }`}>
+                      <Text
+                        className={`text-xs ${
+                          currentBuild.status === 'completed'
+                            ? 'text-green-400'
+                            : currentBuild.status === 'failed'
+                              ? 'text-red-400'
+                              : currentBuild.status === 'generating'
+                                ? 'text-purple-400'
+                                : 'text-gray-400'
+                        }`}>
                         {currentBuild.status || 'idle'}
                       </Text>
+                    </View>
+                    <View className="flex-row items-center gap-1 ml-1">
+                      <Ionicons
+                        name="globe-outline"
+                        size={14}
+                        color={
+                          effectivePublic
+                            ? dk
+                              ? '#a78bfa'
+                              : '#6d28d9'
+                            : dk
+                              ? 'rgba(148,163,184,0.8)'
+                              : 'rgba(148,163,184,0.9)'
+                        }
+                      />
+                      <Switch
+                        value={!!effectivePublic}
+                        onValueChange={handleTogglePublic}
+                        disabled={
+                          currentBuild.status !== 'completed' || isUpdatingVisibility
+                        }
+                        thumbColor={effectivePublic ? '#f9fafb' : '#e5e7eb'}
+                        trackColor={{
+                          false: dk ? 'rgba(31,41,55,0.9)' : 'rgba(209,213,219,1)',
+                          true: dk ? '#4c1d95' : '#7c3aed',
+                        }}
+                      />
                     </View>
                   </View>
                 </View>
@@ -186,19 +256,17 @@ export default function BuildScreen() {
                       className="font-mono text-xs leading-5">
                       {currentBuild.code}
                     </Text>
-                  ) : (
-                    currentBuild.status === 'generating' ? (
-                      <View className="flex-row items-center gap-1">
-                        <ActivityIndicator size="small" color="#8B5CF6" />
-                        <Text className="text-xs text-purple-400">
-                          {stageLabel[currentBuild.stage ?? ''] || 'Generating...'}
-                        </Text>
-                      </View>
-                    ) : (
-                      <Text style={{ color: dk ? '#6b7280' : '#9ca3af' }} className="text-sm">
-                        No code generated yet. Enter a prompt and hit generate.
+                  ) : currentBuild.status === 'generating' ? (
+                    <View className="flex-row items-center gap-1">
+                      <ActivityIndicator size="small" color="#8B5CF6" />
+                      <Text className="text-xs text-purple-400">
+                        {stageLabel[currentBuild.stage ?? ''] || 'Generating...'}
                       </Text>
-                    )
+                    </View>
+                  ) : (
+                    <Text style={{ color: dk ? '#6b7280' : '#9ca3af' }} className="text-sm">
+                      No code generated yet. Enter a prompt and hit generate.
+                    </Text>
                   )}
                 </ScrollView>
               </View>
@@ -220,8 +288,9 @@ export default function BuildScreen() {
               />
 
               <TouchableOpacity
-                className={`absolute bottom-4 right-4 rounded-full p-4 ${isGenerating ? 'bg-[#6D28D9]/60' : 'bg-[#6D28D9]'
-                  }`}
+                className={`absolute bottom-4 right-4 rounded-full p-4 ${
+                  isGenerating ? 'bg-[#6D28D9]/60' : 'bg-[#6D28D9]'
+                }`}
                 onPress={handleGenerate}
                 disabled={isGenerating}
                 activeOpacity={0.8}>
@@ -273,7 +342,7 @@ export default function BuildScreen() {
                       <Text
                         style={{ color: dk ? '#6b7280' : '#4b5563' }}
                         className="mt-4 text-center text-base">
-                        Code isn't generated yet
+                        {`Code isn't generated yet`}
                       </Text>
                       <Text
                         style={{ color: dk ? '#9ca3af' : '#6b7280' }}
@@ -283,18 +352,16 @@ export default function BuildScreen() {
                     </View>
                   )}
                 </View>
-
               </SafeAreaView>
             </Modal>
-
           </View>
           <Text
             numberOfLines={3}
             style={{ color: dk ? '#9ca3af' : '#9ca3af' }}
-            className="mt-2 text-center align-center text-xs text-">
-            Kairo works best with short, focused prompts.  </Text>
+            className="align-center text- mt-2 text-center text-xs">
+            Kairo works best with short, focused prompts.{' '}
+          </Text>
         </KeyboardAvoidingView>
-
       </SafeAreaView>
     </LinearGradient>
   );
