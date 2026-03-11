@@ -1,5 +1,4 @@
 import 'react-native-reanimated';
-import 'react-native-gesture-handler';
 import '../utils/polyfills';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -55,6 +54,7 @@ function RootLayoutNav() {
     } else if (isSignedIn && (inAuthGroup || !segments[0])) {
       router.replace('/(tabs)'); // tabs abhi dev mode hai
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn, isLoaded, segments]);
 
   if (!isLoaded || (isSignedIn && segments[0] === '(auth)')) {
@@ -109,6 +109,7 @@ export default function RootLayout() {
       TextInput.defaultProps = TextInput.defaultProps || {};
       // @ts-ignore
       TextInput.defaultProps.style = {
+        // @ts-ignore
         ...TextInput.defaultProps.style,
         fontFamily: 'DMSans_400Regular',
       };
