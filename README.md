@@ -6,15 +6,15 @@ Kairo is an Expo Router app that uses Convex for backend state, function executi
 
 ## Stack
 
-| Layer | Technology |
-| --- | --- |
-| App | Expo SDK 54 + React Native |
-| Routing | Expo Router |
-| Backend | Convex |
-| Auth | Better Auth |
-| Styling | NativeWind |
-| Animations | Reanimated |
-| Language | TypeScript |
+| Layer      | Technology                 |
+| ---------- | -------------------------- |
+| App        | Expo SDK 54 + React Native |
+| Routing    | Expo Router                |
+| Backend    | Convex                     |
+| Auth       | Better Auth                |
+| Styling    | NativeWind                 |
+| Animations | Reanimated                 |
+| Language   | TypeScript                 |
 
 ## Current Architecture
 

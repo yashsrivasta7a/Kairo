@@ -13,5 +13,5 @@ function flattenClassValue(value: ClassValue): string[] {
 }
 
 export function cn(...inputs: ClassValue[]) {
-  return inputs.flatMap(flattenClassValue).join(' ');
+  return inputs.flatMap(flattenClassValue).join(" ");
 }

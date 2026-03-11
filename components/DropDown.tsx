@@ -1,10 +1,10 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme } from 'nativewind';
-import { BottomSheetModal, BottomSheetBackdrop, BottomSheetFlatList } from '@gorhom/bottom-sheet';
-import { BottomSheetDefaultBackdropProps } from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheetBackdrop/types';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from "@expo/vector-icons";
+import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from "@gorhom/bottom-sheet";
+import { BottomSheetDefaultBackdropProps } from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheetBackdrop/types";
+import { LinearGradient } from "expo-linear-gradient";
+import { useColorScheme } from "nativewind";
+import React, { useMemo, useRef, useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type DropDownProps = {
   label?: string;
@@ -19,19 +19,13 @@ type DropDownItem = {
   value: string;
 };
 
-const DropDown: React.FC<DropDownProps> = ({
-  label,
-  items,
-  value,
-  onValueChange,
-  onChange,
-}) => {
+const DropDown: React.FC<DropDownProps> = ({ label, items, value, onValueChange, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { colorScheme } = useColorScheme();
-  const dk = colorScheme === 'dark';
+  const dk = colorScheme === "dark";
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => ['60%'], []);
+  const snapPoints = useMemo(() => ["60%"], []);
 
   const openSheet = () => {
     bottomSheetModalRef.current?.present();
@@ -49,22 +43,20 @@ const DropDown: React.FC<DropDownProps> = ({
     <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} />
   );
 
-  const selectedLabel = items.find((item) => item.value === value)?.label || 'Select option';
+  const selectedLabel = items.find((item) => item.value === value)?.label || "Select option";
 
-  const bg = dk ? '#0a0a1a' : '#f5f3ff';
-  const border = dk ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
-  const textPrimary = dk ? '#f0e6ff' : '#1a1a2e';
-  const textMuted = dk ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)';
-  const accent = dk ? '#a78bfa' : '#7c3aed';
+  const border = dk ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)";
+  const textPrimary = dk ? "#f0e6ff" : "#1a1a2e";
+  const textMuted = dk ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)";
+  const accent = dk ? "#a78bfa" : "#7c3aed";
 
   return (
-    <View style={{ width: '100%', marginTop: 4 }}>
+    <View style={{ width: "100%", marginTop: 4 }}>
       {label ? (
-        <Text style={{ color: textMuted, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>
+        <Text style={{ color: textMuted, fontSize: 10, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>
           {label}
         </Text>
       ) : null}
-
 
       <TouchableOpacity
         onPress={openSheet}
@@ -73,10 +65,10 @@ const DropDown: React.FC<DropDownProps> = ({
           height: 44,
           borderRadius: 12,
           paddingHorizontal: 14,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          backgroundColor: dk ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          backgroundColor: dk ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
           borderWidth: 1,
           borderColor: border,
         }}
@@ -84,12 +76,7 @@ const DropDown: React.FC<DropDownProps> = ({
         <Text style={{ color: textPrimary, fontSize: 14, flex: 1 }} numberOfLines={1}>
           {selectedLabel}
         </Text>
-        <Ionicons
-          name={isOpen ? 'chevron-up' : 'chevron-down'}
-          size={15}
-          color={textMuted}
-          style={{ marginLeft: 6 }}
-        />
+        <Ionicons name={isOpen ? "chevron-up" : "chevron-down"} size={15} color={textMuted} style={{ marginLeft: 6 }} />
       </TouchableOpacity>
 
       <BottomSheetModal
@@ -101,91 +88,85 @@ const DropDown: React.FC<DropDownProps> = ({
         detached
         bottomInset={24}
         style={{ marginHorizontal: 6 }}
-        backgroundStyle={{ backgroundColor: 'transparent' }}
+        backgroundStyle={{ backgroundColor: "transparent" }}
         handleIndicatorStyle={{
-          backgroundColor: dk ? '#a78bfa' : 'rgba(0,0,0,0.15)',
+          backgroundColor: dk ? "#a78bfa" : "rgba(0,0,0,0.15)",
           width: 36,
         }}
       >
-          <LinearGradient
-            colors={dk ? ['#0d031f', '#000000', '#2b1157'] : ['#f5f3ff', '#ffffff', '#ede9fe']}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            style={[StyleSheet.absoluteFill, { borderRadius: 24 }]}
-            pointerEvents="none"
-          />
-          <BottomSheetFlatList<DropDownItem>
-            data={[...items].reverse()}
-            keyExtractor={(item: DropDownItem) => item.value}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingVertical: 8 }}
-            ListHeaderComponent={
-              <View
+        <LinearGradient
+          colors={dk ? ["#0d031f", "#000000", "#2b1157"] : ["#f5f3ff", "#ffffff", "#ede9fe"]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={[StyleSheet.absoluteFill, { borderRadius: 24 }]}
+          pointerEvents="none"
+        />
+        <BottomSheetFlatList<DropDownItem>
+          data={[...items].reverse()}
+          keyExtractor={(item: DropDownItem) => item.value}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingVertical: 8 }}
+          ListHeaderComponent={
+            <View
+              style={{
+                paddingHorizontal: 20,
+                paddingTop: 16,
+                paddingBottom: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: border,
+              }}
+            >
+              <Text style={{ color: textPrimary, fontSize: 15, fontWeight: "600" }}>{label || "Select"}</Text>
+              <Text style={{ color: textMuted, fontSize: 12, marginTop: 2 }}>{items.length} options</Text>
+            </View>
+          }
+          renderItem={({ item, index }: { item: DropDownItem; index: number }) => {
+            const selected = item.value === value;
+            return (
+              <TouchableOpacity
+                onPress={() => handleChange(item.value)}
+                activeOpacity={0.6}
                 style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                   paddingHorizontal: 20,
-                  paddingTop: 16,
-                  paddingBottom: 12,
-                  borderBottomWidth: 1,
+                  paddingVertical: 14,
+                  borderBottomWidth: index < items.length - 1 ? 1 : 0,
                   borderBottomColor: border,
                 }}
               >
-                <Text style={{ color: textPrimary, fontSize: 15, fontWeight: '600' }}>
-                  {label || 'Select'}
-                </Text>
-                <Text style={{ color: textMuted, fontSize: 12, marginTop: 2 }}>
-                  {items.length} options
-                </Text>
-              </View>
-            }
-            renderItem={({ item, index }: { item: DropDownItem; index: number }) => {
-              const selected = item.value === value;
-              return (
-                <TouchableOpacity
-                  onPress={() => handleChange(item.value)}
-                  activeOpacity={0.6}
+                <Text
                   style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingHorizontal: 20,
-                    paddingVertical: 14,
-                    borderBottomWidth: index < items.length - 1 ? 1 : 0,
-                    borderBottomColor: border,
+                    fontSize: 14,
+                    color: selected ? accent : textPrimary,
+                    fontWeight: selected ? "600" : "400",
                   }}
                 >
-                  <Text
+                  {item.label}
+                </Text>
+                {selected && (
+                  <View
                     style={{
-                      fontSize: 14,
-                      color: selected ? accent : textPrimary,
-                      fontWeight: selected ? '600' : '400',
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      backgroundColor: dk ? "rgba(167,139,250,0.15)" : "rgba(124,58,237,0.1)",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    {item.label}
-                  </Text>
-                  {selected && (
-                    <View
-                      style={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: 10,
-                        backgroundColor: dk ? 'rgba(167,139,250,0.15)' : 'rgba(124,58,237,0.1)',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: accent }} />
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            }}
-          />
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: accent }} />
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          }}
+        />
       </BottomSheetModal>
     </View>
   );
 };
 
 export default DropDown;
-
-

@@ -1,6 +1,6 @@
-import { useQuery as useConvexQuery } from 'convex/react';
-import { api } from '../convex/_generated/api';
-import { convex } from './convex';
+import { useQuery as useConvexQuery } from "convex/react";
+import { api } from "../convex/_generated/api";
+import { convex } from "./convex";
 
 function createFieldBuilder() {
   return {
@@ -34,7 +34,12 @@ export const generatedAppSchemaBuilder = {
   },
 };
 
-function createOperation(type: 'create' | 'update' | 'delete', model: string, entityId: string, data?: Record<string, unknown>) {
+function createOperation(
+  type: "create" | "update" | "delete",
+  model: string,
+  entityId: string,
+  data?: Record<string, unknown>
+) {
   const operation = {
     type,
     model,
@@ -62,13 +67,13 @@ function createTxProxy() {
             get(_innerTarget, entityId) {
               return {
                 create(data: Record<string, unknown>) {
-                  return createOperation('create', String(model), String(entityId), data);
+                  return createOperation("create", String(model), String(entityId), data);
                 },
                 update(data: Record<string, unknown>) {
-                  return createOperation('update', String(model), String(entityId), data);
+                  return createOperation("update", String(model), String(entityId), data);
                 },
                 delete() {
-                  return createOperation('delete', String(model), String(entityId));
+                  return createOperation("delete", String(model), String(entityId));
                 },
               };
             },
@@ -80,7 +85,7 @@ function createTxProxy() {
 }
 
 function randomId() {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
   }
 
@@ -102,7 +107,7 @@ export function createGeneratedAppRuntime(buildId: string) {
                   buildId: buildId as never,
                   query: querySpec,
                 }
-              : 'skip'
+              : "skip"
           );
 
           return {
@@ -111,7 +116,7 @@ export function createGeneratedAppRuntime(buildId: string) {
             error: null,
           };
         },
-        async transact(operations: Array<Record<string, unknown>>) {
+        async transact(operations: Record<string, unknown>[]) {
           const sanitizedOperations = operations.map((operation) => ({
             type: operation.type,
             model: operation.model,

@@ -1,8 +1,8 @@
-import { View, TouchableOpacity, Image, GestureResponderEvent } from 'react-native';
-import React from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from "@/lib/auth-client";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React from "react";
+import { GestureResponderEvent, Image, TouchableOpacity, View } from "react-native";
 
 type Props = {
   className?: string;
@@ -11,16 +11,11 @@ type Props = {
   size?: number;
 };
 
-const UserProfile: React.FC<Props> = ({
-  className = '',
-  avatarClassName = '',
-  onPress,
-  size = 40,
-}) => {
+const UserProfile: React.FC<Props> = ({ className = "", avatarClassName = "", onPress, size = 40 }) => {
   const { data: session } = authClient.useSession();
   const user = session?.user;
   const router = useRouter();
-  const handle = onPress ?? (() => router.push('/profile'));
+  const handle = onPress ?? (() => router.push("/profile"));
   const imgStyle = { width: size, height: size, borderRadius: size / 2 };
   const blurScale = 1.6;
   const outerPadding = Math.max(6, Math.round(size * 0.14));
@@ -29,7 +24,8 @@ const UserProfile: React.FC<Props> = ({
     <TouchableOpacity
       onPress={handle}
       className={`relative rounded-full border border-purple-500 ${className}`}
-      style={{ padding: outerPadding }}>
+      style={{ padding: outerPadding }}
+    >
       {user?.image ? (
         <View className="relative">
           <Image
@@ -39,11 +35,7 @@ const UserProfile: React.FC<Props> = ({
             style={{ transform: [{ scale: blurScale }], ...imgStyle }}
           />
 
-          <Image
-            source={{ uri: user.image }}
-            className={`rounded-full ${avatarClassName}`}
-            style={imgStyle}
-          />
+          <Image source={{ uri: user.image }} className={`rounded-full ${avatarClassName}`} style={imgStyle} />
         </View>
       ) : (
         <Ionicons name="person" size={Math.round(size * 0.5)} color="#fafafa" />

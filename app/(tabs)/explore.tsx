@@ -1,12 +1,12 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import React from "react";
+import { Text, View } from "react-native";
 
 const explore = () => {
-    return (
-        <View>
-            <Text>explore</Text>
-        </View>
-    )
-}
+  return (
+    <View>
+      <Text>explore</Text>
+    </View>
+  );
+};
 
-export default explore
+export default explore;

@@ -1,6 +1,6 @@
-import { ConvexError, v } from 'convex/values';
-import { mutation, query } from './_generated/server';
-import { authComponent } from './auth';
+import { ConvexError, v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import { authComponent } from "./auth";
 
 type GeneratedRecord = {
   _id: string;
@@ -14,28 +14,28 @@ type GeneratedRecord = {
 
 function compareValue(left: unknown, operator: string, right: unknown) {
   switch (operator) {
-    case 'eq':
+    case "eq":
       return left === right;
-    case 'ne':
+    case "ne":
       return left !== right;
-    case 'lt':
-      return typeof left === 'number' && typeof right === 'number' && left < right;
-    case 'lte':
-      return typeof left === 'number' && typeof right === 'number' && left <= right;
-    case 'gt':
-      return typeof left === 'number' && typeof right === 'number' && left > right;
-    case 'gte':
-      return typeof left === 'number' && typeof right === 'number' && left >= right;
-    case 'in':
+    case "lt":
+      return typeof left === "number" && typeof right === "number" && left < right;
+    case "lte":
+      return typeof left === "number" && typeof right === "number" && left <= right;
+    case "gt":
+      return typeof left === "number" && typeof right === "number" && left > right;
+    case "gte":
+      return typeof left === "number" && typeof right === "number" && left >= right;
+    case "in":
       return Array.isArray(right) && right.includes(left);
-    case 'not_in':
+    case "not_in":
       return Array.isArray(right) && !right.includes(left);
-    case 'contains':
-      return typeof left === 'string' && typeof right === 'string' && left.includes(right);
-    case 'starts_with':
-      return typeof left === 'string' && typeof right === 'string' && left.startsWith(right);
-    case 'ends_with':
-      return typeof left === 'string' && typeof right === 'string' && left.endsWith(right);
+    case "contains":
+      return typeof left === "string" && typeof right === "string" && left.includes(right);
+    case "starts_with":
+      return typeof left === "string" && typeof right === "string" && left.startsWith(right);
+    case "ends_with":
+      return typeof left === "string" && typeof right === "string" && left.endsWith(right);
     default:
       return false;
   }
@@ -47,16 +47,14 @@ function matchesWhere(record: Record<string, unknown>, where: any) {
   }
 
   if (Array.isArray(where)) {
-    return where.every((clause) =>
-      compareValue(record[clause.field as string], clause.operator ?? 'eq', clause.value)
-    );
+    return where.every((clause) => compareValue(record[clause.field as string], clause.operator ?? "eq", clause.value));
   }
 
   return Object.entries(where).every(([field, value]) => record[field] === value);
 }
 
 function sortRows(rows: GeneratedRecord[], order: any) {
-  if (!order || typeof order !== 'object') {
+  if (!order || typeof order !== "object") {
     return rows;
   }
 
@@ -74,7 +72,7 @@ function sortRows(rows: GeneratedRecord[], order: any) {
     }
 
     const result = leftValue > rightValue ? 1 : -1;
-    return direction === 'desc' ? -result : result;
+    return direction === "desc" ? -result : result;
   });
 }
 
@@ -83,7 +81,7 @@ async function requireOwnedBuild(ctx: any, buildId: any) {
   const build = await ctx.db.get(buildId);
 
   if (!user || !build || build.ownerId !== user._id) {
-    throw new ConvexError('Build not found');
+    throw new ConvexError("Build not found");
   }
 
   return build;
@@ -91,18 +89,18 @@ async function requireOwnedBuild(ctx: any, buildId: any) {
 
 export const read = query({
   args: {
-    buildId: v.id('builds'),
+    buildId: v.id("builds"),
     query: v.any(),
   },
   handler: async (ctx, args) => {
     await requireOwnedBuild(ctx, args.buildId);
 
     const records = await ctx.db
-      .query('generatedAppRecords')
-      .withIndex('by_buildId', (q) => q.eq('buildId', args.buildId))
+      .query("generatedAppRecords")
+      .withIndex("by_buildId", (q) => q.eq("buildId", args.buildId))
       .collect();
 
-    const result: Record<string, Array<Record<string, unknown>>> = {};
+    const result: Record<string, Record<string, unknown>[]> = {};
     const querySpec = args.query ?? {};
 
     for (const [model, spec] of Object.entries(querySpec as Record<string, any>)) {
@@ -123,20 +121,20 @@ export const read = query({
 
 export const transact = mutation({
   args: {
-    buildId: v.id('builds'),
+    buildId: v.id("builds"),
     operations: v.array(v.any()),
   },
   handler: async (ctx, args) => {
     await requireOwnedBuild(ctx, args.buildId);
     const now = Date.now();
 
-    for (const operation of args.operations as Array<any>) {
-      if (!operation || typeof operation !== 'object') {
+    for (const operation of args.operations as any[]) {
+      if (!operation || typeof operation !== "object") {
         continue;
       }
 
-      if (operation.type === 'create') {
-        await ctx.db.insert('generatedAppRecords', {
+      if (operation.type === "create") {
+        await ctx.db.insert("generatedAppRecords", {
           buildId: args.buildId,
           model: operation.model,
           entityId: operation.entityId,
@@ -148,15 +146,15 @@ export const transact = mutation({
       }
 
       const existing = await ctx.db
-        .query('generatedAppRecords')
-        .withIndex('by_buildId_model_entityId', (q) =>
-          q.eq('buildId', args.buildId).eq('model', operation.model).eq('entityId', operation.entityId)
+        .query("generatedAppRecords")
+        .withIndex("by_buildId_model_entityId", (q) =>
+          q.eq("buildId", args.buildId).eq("model", operation.model).eq("entityId", operation.entityId)
         )
         .first();
 
       if (!existing) {
-        if (operation.type === 'update') {
-          await ctx.db.insert('generatedAppRecords', {
+        if (operation.type === "update") {
+          await ctx.db.insert("generatedAppRecords", {
             buildId: args.buildId,
             model: operation.model,
             entityId: operation.entityId,
@@ -168,7 +166,7 @@ export const transact = mutation({
         continue;
       }
 
-      if (operation.type === 'update') {
+      if (operation.type === "update") {
         await ctx.db.patch(existing._id, {
           data: {
             ...(existing.data ?? {}),
@@ -178,7 +176,7 @@ export const transact = mutation({
         });
       }
 
-      if (operation.type === 'delete') {
+      if (operation.type === "delete") {
         await ctx.db.delete(existing._id);
       }
     }
