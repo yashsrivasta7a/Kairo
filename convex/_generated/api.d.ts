@@ -9,6 +9,8 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as buildAccess from "../buildAccess.js";
+import type * as buildFiles from "../buildFiles.js";
 import type * as builds from "../builds.js";
 import type * as generatedApps from "../generatedApps.js";
 import type * as generation from "../generation.js";
@@ -23,6 +25,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  buildAccess: typeof buildAccess;
+  buildFiles: typeof buildFiles;
   builds: typeof builds;
   generatedApps: typeof generatedApps;
   generation: typeof generation;

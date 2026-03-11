@@ -6,6 +6,7 @@ export const setBuildState = internalMutation({
     buildId: v.id("builds"),
     patch: v.object({
       code: v.optional(v.string()),
+      storageId: v.optional(v.id("_storage")),
       status: v.optional(
         v.union(v.literal("idle"), v.literal("generating"), v.literal("completed"), v.literal("failed"))
       ),

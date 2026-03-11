@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
-import { internalQuery, mutation, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { authComponent } from "./auth";
 
 function slugifyAppName(appName: string) {
@@ -27,7 +27,8 @@ function toBuildView(build: Doc<"builds">) {
     ownerId: build.ownerId,
     appName: build.appName,
     slug: build.slug,
-    code: build.code,
+    storageId: build.storageId ?? null,
+    hasCode: Boolean(build.storageId || build.code),
     status: build.status,
     stage: build.stage,
     error: build.error,
@@ -73,7 +74,6 @@ export const create = mutation({
       ownerId: user._id,
       appName: args.appName.trim(),
       slug: slugifyAppName(args.appName),
-      code: "",
       status: "idle",
       stage: "idle",
       createdAt: now,
@@ -81,33 +81,5 @@ export const create = mutation({
     });
 
     return { buildId, slug: slugifyAppName(args.appName) };
-  },
-});
-
-export const getOwnedBuildInternal = internalQuery({
-  args: {
-    buildId: v.id("builds"),
-    ownerId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const build = await ctx.db.get(args.buildId);
-    if (!build || build.ownerId !== args.ownerId) {
-      return null;
-    }
-    return build;
-  },
-});
-
-export const assertBuildOwnership = internalQuery({
-  args: {
-    buildId: v.id("builds"),
-    ownerId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const build = await ctx.db.get(args.buildId);
-    if (!build || build.ownerId !== args.ownerId) {
-      throw new ConvexError("Build not found");
-    }
-    return build;
   },
 });

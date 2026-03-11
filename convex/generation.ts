@@ -17,7 +17,7 @@ export const generate = action({
       throw new ConvexError("Unauthenticated");
     }
 
-    const build = await ctx.runQuery(internal.builds.assertBuildOwnership, {
+    const build = await ctx.runQuery(internal.buildAccess.assertBuildOwnership, {
       buildId: args.buildId,
       ownerId: user._id,
     });
@@ -51,16 +51,26 @@ export const generate = action({
             });
           },
           onComplete: async (update) => {
+            const blob = new Blob([update.code], {
+              type: "text/plain; charset=utf-8",
+            });
+            const storageId = await ctx.storage.store(blob);
+
             await ctx.runMutation(internal.generationState.setBuildState, {
               buildId: args.buildId,
               patch: {
-                code: update.code,
+                code: undefined,
+                storageId,
                 status: update.status,
                 stage: update.stage,
                 error: undefined,
                 updatedAt: update.updatedAt,
               },
             });
+
+            if (build.storageId && build.storageId !== storageId) {
+              await ctx.storage.delete(build.storageId);
+            }
           },
           onFailure: async (update) => {
             await ctx.runMutation(internal.generationState.setBuildState, {

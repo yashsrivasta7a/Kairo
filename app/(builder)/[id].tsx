@@ -29,11 +29,15 @@ export default function BuildScreen() {
   const routeBuildId = Array.isArray(id) ? id[0] : id;
   const { builds, options } = useBuilds();
   const generateBuild = useAction(api.generation.generate);
+  const loadBuildCode = useAction(api.buildFiles.getCodeForCurrentUser);
   const router = useRouter();
   const [prompt, setPrompt] = useState("");
   const [lastPrompt, setLastPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [codeCache, setCodeCache] = useState<Record<string, { code: string; revision: string }>>({});
+  const [isCodeLoading, setIsCodeLoading] = useState(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
   const { colorScheme } = useColorScheme();
   const dk = colorScheme === "dark";
 
@@ -52,6 +56,63 @@ export default function BuildScreen() {
   }, [routeBuildId, options, router]);
 
   const currentBuild = builds.find((b: any) => b.id === routeBuildId);
+  const currentCodeRevision = currentBuild?.storageId ?? (currentBuild?.hasCode ? "legacy" : null);
+  const cachedCode = currentBuild ? codeCache[currentBuild.id] : undefined;
+  const currentCode =
+    cachedCode && currentCodeRevision && cachedCode.revision === currentCodeRevision ? cachedCode.code : "";
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function hydrateBuildCode() {
+      if (!currentBuild?.id || !currentCodeRevision) {
+        setIsCodeLoading(false);
+        setCodeError(null);
+        return;
+      }
+
+      if (cachedCode?.revision === currentCodeRevision) {
+        setIsCodeLoading(false);
+        setCodeError(null);
+        return;
+      }
+
+      setIsCodeLoading(true);
+      setCodeError(null);
+
+      try {
+        const result = await loadBuildCode({ buildId: currentBuild.id as never });
+        if (isCancelled) {
+          return;
+        }
+
+        setCodeCache((prev) => ({
+          ...prev,
+          [currentBuild.id]: {
+            code: result?.code ?? "",
+            revision: currentCodeRevision,
+          },
+        }));
+      } catch (err) {
+        if (isCancelled) {
+          return;
+        }
+
+        console.error("Failed to load build code", err);
+        setCodeError("Failed to load generated code.");
+      } finally {
+        if (!isCancelled) {
+          setIsCodeLoading(false);
+        }
+      }
+    }
+
+    void hydrateBuildCode();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [cachedCode?.revision, currentBuild?.id, currentCodeRevision, loadBuildCode]);
 
   const handleGenerate = async () => {
     if (!prompt || !routeBuildId) return;
@@ -179,10 +240,15 @@ export default function BuildScreen() {
                   </View>
                 </View>
                 <ScrollView className="flex-1 p-4">
-                  {currentBuild.code ? (
+                  {currentCode ? (
                     <Text style={{ color: dk ? "#86efac" : "#15803d" }} className="font-mono text-xs leading-5">
-                      {currentBuild.code}
+                      {currentCode}
                     </Text>
+                  ) : isCodeLoading ? (
+                    <View className="flex-row items-center gap-1">
+                      <ActivityIndicator size="small" color="#8B5CF6" />
+                      <Text className="text-xs text-purple-400">Loading generated code...</Text>
+                    </View>
                   ) : currentBuild.status === "generating" ? (
                     <View className="flex-row items-center gap-1">
                       <ActivityIndicator size="small" color="#8B5CF6" />
@@ -190,6 +256,10 @@ export default function BuildScreen() {
                         {stageLabel[currentBuild.stage ?? ""] || "Generating..."}
                       </Text>
                     </View>
+                  ) : codeError ? (
+                    <Text style={{ color: dk ? "#fca5a5" : "#b91c1c" }} className="text-sm">
+                      {codeError}
+                    </Text>
                   ) : (
                     <Text style={{ color: dk ? "#6b7280" : "#9ca3af" }} className="text-sm">
                       No code generated yet. Enter a prompt and hit generate.
@@ -254,8 +324,22 @@ export default function BuildScreen() {
                   </Pressable>
                 </View>
                 <View style={{ flex: 1 }}>
-                  {currentBuild?.status === "completed" ? (
-                    <BuildUi code={currentBuild.code} buildId={currentBuild.id} />
+                  {currentBuild?.status === "completed" && currentCode ? (
+                    <BuildUi code={currentCode} buildId={currentBuild.id} />
+                  ) : currentBuild?.status === "completed" && isCodeLoading ? (
+                    <View className="flex-1 items-center justify-center gap-3 px-4">
+                      <ActivityIndicator size="large" color="#8B5CF6" />
+                      <Text style={{ color: dk ? "#9ca3af" : "#6b7280" }} className="text-center text-sm">
+                        Loading generated code...
+                      </Text>
+                    </View>
+                  ) : currentBuild?.status === "completed" && codeError ? (
+                    <View className="flex-1 items-center justify-center px-4">
+                      <Ionicons name="alert-circle-outline" size={48} color={dk ? "#fca5a5" : "#dc2626"} />
+                      <Text style={{ color: dk ? "#fca5a5" : "#b91c1c" }} className="mt-4 text-center text-base">
+                        {codeError}
+                      </Text>
+                    </View>
                   ) : (
                     <View className="flex-1 items-center justify-center px-4">
                       <Ionicons name="code-slash-outline" size={48} color={dk ? "#9ca3af" : "#6b7280"} />

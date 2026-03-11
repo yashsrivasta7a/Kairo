@@ -5,7 +5,7 @@ export function useBuilds() {
   const builds = useQuery(api.builds.listForCurrentUser) ?? [];
   const isLoading = builds === undefined;
 
-  const options = builds.map((build) => ({
+  const options = builds.map((build: any) => ({
     label: build.slug || build.appName || "Build",
     value: build.id,
   }));
@@ -15,6 +15,5 @@ export function useBuilds() {
     options,
     isLoading,
     error: null,
-    // userId: user?.id,
   };
 }
