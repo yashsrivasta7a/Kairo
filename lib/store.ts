@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { useSyncExternalStore } from 'react'
 
 interface CreateModalStore {
     isOpen: boolean
@@ -13,15 +13,45 @@ interface CreateModalStore {
     setIsCreating: (val: boolean) => void
 }
 
-export const useCreateModalStore = create<CreateModalStore>((set) => ({
+type CreateModalState = Omit<
+    CreateModalStore,
+    'open' | 'close' | 'toggle' | 'setAppName' | 'setBuildId' | 'setIsCreating'
+>
+
+let state: CreateModalState = {
     isOpen: false,
     appName: '',
     buildId: '',
     isCreating: false,
-    open: () => set({ isOpen: true }),
-    close: () => set({ isOpen: false }),
-    toggle: () => set((state) => ({ isOpen: !state.isOpen })),
-    setAppName: (name) => set({ appName: name }),
-    setBuildId: (id) => set({ buildId: id }),
-    setIsCreating: (val) => set({ isCreating: val }),
-}))
+}
+
+const listeners = new Set<() => void>()
+
+function setState(update: Partial<CreateModalState> | ((current: CreateModalState) => Partial<CreateModalState>)) {
+    const nextPatch = typeof update === 'function' ? update(state) : update
+    state = { ...state, ...nextPatch }
+    listeners.forEach((listener) => listener())
+}
+
+function subscribe(listener: () => void) {
+    listeners.add(listener)
+    return () => listeners.delete(listener)
+}
+
+function getSnapshot() {
+    return state
+}
+
+export function useCreateModalStore(): CreateModalStore {
+    const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
+
+    return {
+        ...snapshot,
+        open: () => setState({ isOpen: true }),
+        close: () => setState({ isOpen: false }),
+        toggle: () => setState((current) => ({ isOpen: !current.isOpen })),
+        setAppName: (name: string) => setState({ appName: name }),
+        setBuildId: (id: string) => setState({ buildId: id }),
+        setIsCreating: (val: boolean) => setState({ isCreating: val }),
+    }
+}

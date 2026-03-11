@@ -1,8 +1,7 @@
 import * as Babel from '@babel/standalone';
-import * as Instant from '@instantdb/react-native';
-import { i as instantI } from '@instantdb/react-native';
 import React from 'react';
 import ReactNative from 'react-native';
+import { createGeneratedAppRuntime } from './generatedAppAdapter';
 
 // ============================================================================
 // POLYFILLS & MOCKS - For modules not available in execution environment
@@ -93,11 +92,9 @@ const DeviceInfoMock = {
     return Math.min(dim.width, dim.height) >= 600;
   },
 };
-
-
-const codeToEl = (instantAppId: string, inputCode: string) => {
+const codeToEl = (buildId: string, inputCode: string) => {
   let code = inputCode ;
-  code = code.replaceAll(/instantAppId/g, `'${instantAppId}'`);
+  code = code.replaceAll(/buildDataId/g, `'${buildId}'`);
   //Triming code before the first import
   const importIndex = code.indexOf('import');
   if(importIndex > 0){
@@ -130,7 +127,7 @@ const codeToEl = (instantAppId: string, inputCode: string) => {
     const require = (name) => {
       if (name === 'react') return React;
       if (name === 'react-native') return ReactNative;
-      if (name === '@instantdb/react-native') return Instant;
+      if (name === '@kairo/runtime') return GeneratedRuntime;
       if (name === '@react-native-async-storage/async-storage') return AsyncStorage;
       if (name === 'async-storage') return AsyncStorage;
       if (name === 'react-native-vibration') return Vibration;
@@ -139,7 +136,7 @@ const codeToEl = (instantAppId: string, inputCode: string) => {
       if (name === 'react-native-share') return Share;
       if (name === 'react-native-alert') return Alert;
       if (name === 'react-native-back-handler') return BackHandler;
-      throw new Error('Module not found: ' + name + '. Only React, React Native, and InstantDB are available in preview.');
+      throw new Error('Module not found: ' + name + '. Only React, React Native, and the Kairo runtime are available in preview.');
     };
 
     ${transformed}
@@ -147,11 +144,10 @@ const codeToEl = (instantAppId: string, inputCode: string) => {
     return module.exports.default || module.exports;
   `;
 
-   const moduleFn = new Function('React', 'ReactNative', 'Instant', 'AsyncStorage', 'Vibration', 'Clipboard', 'Linking', 'Share', 'Alert', 'BackHandler', moduleCode);
+   const moduleFn = new Function('React', 'ReactNative', 'GeneratedRuntime', 'AsyncStorage', 'Vibration', 'Clipboard', 'Linking', 'Share', 'Alert', 'BackHandler', moduleCode);
 
-  // Ensure InstantDB schema builder `i` is accessible
-  const InstantWithBuilder = { ...Instant, i: instantI };
-  const Component = moduleFn(React, ReactNative, InstantWithBuilder, AsyncStorageMock, VibrationMock, ClipboardMock, LinkingMock, ShareMock, AlertMock, BackHandlerMock);
+  const generatedRuntime = createGeneratedAppRuntime(buildId);
+  const Component = moduleFn(React, ReactNative, generatedRuntime, AsyncStorageMock, VibrationMock, ClipboardMock, LinkingMock, ShareMock, AlertMock, BackHandlerMock);
 
 
   return React.createElement(Component);

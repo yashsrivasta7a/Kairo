@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAction } from 'convex/react';
 import {
   View,
   Text,
@@ -16,17 +17,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useColorScheme } from 'nativewind';
+import { api } from '../../convex/_generated/api';
 
 import DropDown from 'components/DropDown';
 import UserProfile from 'components/userProfile';
 
-import { useBuilds } from 'lib/instant/useBuilds';
+import { useBuilds } from 'lib/useBuilds';
 import BuildUi from 'lib/buildUi';
 
 export default function BuildScreen() {
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
   const routeBuildId = Array.isArray(id) ? id[0] : id;
-  const { builds, options, userId } = useBuilds();
+  const { builds, options } = useBuilds();
+  const generateBuild = useAction(api.generation.generate);
   const router = useRouter();
   const [prompt, setPrompt] = useState('');
   const [lastPrompt, setLastPrompt] = useState('');
@@ -58,11 +61,7 @@ export default function BuildScreen() {
     setLastPrompt(prompt); // save before clearing so retry can reuse it
 
     try {
-      await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, userId, buildId: routeBuildId }),
-      });
+      await generateBuild({ prompt, buildId: routeBuildId as never });
       setPrompt('');
     } catch (err) {
       console.error('Generation failed', err);
@@ -76,11 +75,7 @@ export default function BuildScreen() {
     setIsGenerating(true);
 
     try {
-      await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: lastPrompt, userId, buildId: routeBuildId }),
-      });
+      await generateBuild({ prompt: lastPrompt, buildId: routeBuildId as never });
     } catch (err) {
       console.error('Retry failed', err);
     } finally {
@@ -261,8 +256,8 @@ export default function BuildScreen() {
                   </Pressable>
                 </View>
                 <View style={{ flex: 1 }}>
-                  {currentBuild?.status === 'completed' && currentBuild?.instantId ? (
-                    <BuildUi code={currentBuild.code} instantAppId={currentBuild.instantId} />
+                  {currentBuild?.status === 'completed' ? (
+                    <BuildUi code={currentBuild.code} buildId={currentBuild.id} />
                   ) : (
                     <View className="flex-1 items-center justify-center px-4">
                       <Ionicons

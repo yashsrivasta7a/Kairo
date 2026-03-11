@@ -1,7 +1,6 @@
 import { createAzure } from '@ai-sdk/azure';
 import { generateText } from 'ai';
 import { validateCode } from './validator';
-import { adminDB } from 'lib/instant/adminDb';
 import { getSpecPrompt, getScreenPrompt, getGluePrompt } from '../../utils/systemPromptV2';
 
 const azure = createAzure({
@@ -13,14 +12,35 @@ const azure = createAzure({
 
 const MAX_FIX_ATTEMPTS = 3;
 
+type PipelineStatus = 'generating' | 'completed' | 'failed';
+type PipelineStage = 'specs' | 'screens' | 'gluing' | 'validation' | 'completed' | 'failed';
+
+type PipelineHandlers = {
+    onProgress?: (update: {
+        status?: PipelineStatus;
+        stage: PipelineStage;
+        updatedAt: number;
+    }) => Promise<void>;
+    onComplete?: (update: {
+        code: string;
+        status: 'completed';
+        stage: 'completed';
+        updatedAt: number;
+    }) => Promise<void>;
+    onFailure?: (update: {
+        error: string;
+        status: 'failed';
+        stage: 'failed';
+        updatedAt: number;
+    }) => Promise<void>;
+};
+
 export async function runPipeline({
-    buildId,
     prompt,
-    userId,
+    handlers,
 }: {
-    buildId: string;
     prompt: string;
-    userId: string;
+    handlers?: PipelineHandlers;
 }) {
     let currentStage = 'init';
     let lastCode: string | undefined;
@@ -28,12 +48,11 @@ export async function runPipeline({
 
     try {
         currentStage = 'specs';
-        await adminDB.transact([
-            adminDB.tx.builds[buildId].update({
-                status: 'generating',
-                stage: 'specs',
-                updatedAt: Date.now()
-            }).link({ owner: userId })])
+        await handlers?.onProgress?.({
+            status: 'generating',
+            stage: 'specs',
+            updatedAt: Date.now(),
+        });
 
         const { text: specText } = await generateText({
             model: azure(process.env.AZURE_OPENAI_DEPLOYMENT_NAME!),
@@ -64,9 +83,11 @@ export async function runPipeline({
         console.log('📋 SPEC:', JSON.stringify(spec, null, 2));
 
         currentStage = 'screens';
-        await adminDB.transact([
-            adminDB.tx.builds[buildId].update({ stage: 'screens', updatedAt: Date.now() })
-        ])
+        await handlers?.onProgress?.({
+            status: 'generating',
+            stage: 'screens',
+            updatedAt: Date.now(),
+        });
 
         const screenCodes: string[] = [];
         for (const screen of spec.screens) {
@@ -81,9 +102,11 @@ export async function runPipeline({
 
         // Stage 3 — glue everything together
         currentStage = 'gluing';
-        await adminDB.transact([
-            adminDB.tx.builds[buildId].update({ stage: 'gluing', updatedAt: Date.now() })
-        ]);
+        await handlers?.onProgress?.({
+            status: 'generating',
+            stage: 'gluing',
+            updatedAt: Date.now(),
+        });
 
         const { text: rawFinalCode } = await generateText({
             model: azure(process.env.AZURE_OPENAI_DEPLOYMENT_NAME!),
@@ -95,6 +118,11 @@ export async function runPipeline({
 
         // ── 3-attempt fix loop ────────────────────────────────────────────
         currentStage = 'validation';
+        await handlers?.onProgress?.({
+            status: 'generating',
+            stage: 'validation',
+            updatedAt: Date.now(),
+        });
         // Strip markdown fences the glue AI sometimes wraps output in
         const stripFences = (s: string) => s.replace(/^```[\w]*\n?/m, '').replace(/```\s*$/m, '').trim();
         let codeToFix = stripFences(rawFinalCode);
@@ -107,16 +135,13 @@ export async function runPipeline({
 
             if (validation.valid) {
                 // ✅ Code is good — save and exit
-                await adminDB.transact([
-                    adminDB.tx.builds[buildId].update({
-                        code: codeToFix,
-                        streaming: 'false',
-                        status: 'completed',
-                        stage: 'completed',
-                        updatedAt: Date.now(),
-                    }),
-                ]);
-                return;
+                await handlers?.onComplete?.({
+                    code: codeToFix,
+                    status: 'completed',
+                    stage: 'completed',
+                    updatedAt: Date.now(),
+                });
+                return { code: codeToFix };
             }
 
             const errorMsg = validation.error!;
@@ -147,19 +172,20 @@ export async function runPipeline({
 
     } catch (error: any) {
         console.error('Pipeline failed:', error);
-        await adminDB.transact([
-            adminDB.tx.builds[buildId].update({
-                streaming: 'false',
-                status: 'failed',
-                stage: 'failed',
-                error: JSON.stringify({
-                    stage: currentStage,
-                    attempt: lastAttempt,
-                    message: error?.message ?? String(error),
-                    hint: lastCode?.slice(0, 300),
-                }),
-                updatedAt: Date.now(),
-            }),
-        ]);
+        const serializedError = JSON.stringify({
+            stage: currentStage,
+            attempt: lastAttempt,
+            message: error?.message ?? String(error),
+            hint: lastCode?.slice(0, 300),
+        });
+
+        await handlers?.onFailure?.({
+            error: serializedError,
+            status: 'failed',
+            stage: 'failed',
+            updatedAt: Date.now(),
+        });
+
+        throw error;
     }
 }

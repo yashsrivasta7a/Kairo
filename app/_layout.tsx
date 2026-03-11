@@ -1,11 +1,8 @@
-import 'react-native-reanimated';
-import '../utils/polyfills';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
-import * as SecureStore from 'expo-secure-store';
-import { useEffect } from 'react';
-import { ActivityIndicator, View, Text, TextInput } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Text, TextInput } from 'react-native';
 import './global.css';
 import {
   useFonts,
@@ -24,68 +21,55 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { ThemeProvider } from '../constants/ThemeContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-const tokenCache = {
-  async getToken(key: string) {
-    try {
-      return SecureStore.getItemAsync(key);
-    } catch {
-      return null;
-    }
-  },
-  async saveToken(key: string, value: string) {
-    try {
-      return SecureStore.setItemAsync(key, value);
-    } catch {}
-  },
-};
+import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react';
+import { authClient } from '@/lib/auth-client';
+import { convex } from '@/lib/convex';
+import * as SplashScreen from 'expo-splash-screen';
 
-function RootLayoutNav() {
-  const { isLoaded, isSignedIn } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    const inAuthGroup = segments[0] === '(auth)';
-
-    if (!isSignedIn && !inAuthGroup) {
-      router.replace('/(auth)/signin');
-    } else if (isSignedIn && (inAuthGroup || !segments[0])) {
-      router.replace('/(tabs)'); // tabs abhi dev mode hai
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSignedIn, isLoaded, segments]);
-
-  if (!isLoaded || (isSignedIn && segments[0] === '(auth)')) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#000',
-        }}>
-        <ActivityIndicator size="large" color="#fff" />
-        <StatusBar hidden />
-      </View>
-    );
-  }
-
-  return (
-    <>
-      <StatusBar hidden />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="(builder)" />
-        <Stack.Screen name="profile" />
-      </Stack>
-    </>
-  );
-}
+WebBrowser.maybeCompleteAuthSession();
+SplashScreen.preventAutoHideAsync().catch(() => {
+  // Ignore errors if splash was already prevented.
+});
 
 const queryClient = new QueryClient();
+
+function RootNavigator() {
+  const { data: session, isPending } = authClient.useSession();
+  const hasHiddenSplash = useRef(false);
+  const isLoggedIn = !!session?.user;
+
+  useEffect(() => {
+    if (!isPending && !hasHiddenSplash.current) {
+      hasHiddenSplash.current = true;
+      SplashScreen.hideAsync().catch(() => {
+        // Ignore if splash is already hidden.
+      });
+    }
+  }, [isPending]);
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={!isLoggedIn}>
+        <Stack.Screen
+          name="(auth)"
+          options={{
+            animation: 'none',
+          }}
+        />
+      </Stack.Protected>
+      <Stack.Protected guard={isLoggedIn}>
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            animation: 'none',
+          }}
+        />
+        <Stack.Screen name="(builder)" />
+        <Stack.Screen name="profile" />
+      </Stack.Protected>
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -120,22 +104,18 @@ export default function RootLayout() {
     return null;
   }
 
-  const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
-  if (!publishableKey) {
-    throw new Error('Add EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY to your .env file');
-  }
-
   return (
-    <GestureHandlerRootView style={{ flex: 2 }}>
-      <ThemeProvider>
-        <BottomSheetModalProvider>
-          <QueryClientProvider client={queryClient}>
-            <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-              <RootLayoutNav />
-            </ClerkProvider>
-          </QueryClientProvider>
-        </BottomSheetModalProvider>
-      </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+        <ThemeProvider>
+          <BottomSheetModalProvider>
+            <QueryClientProvider client={queryClient}>
+              <StatusBar hidden />
+              <RootNavigator />
+            </QueryClientProvider>
+          </BottomSheetModalProvider>
+        </ThemeProvider>
+      </ConvexBetterAuthProvider>
     </GestureHandlerRootView>
   );
 }

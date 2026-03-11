@@ -9,7 +9,6 @@ import {
   Alert,
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import { useUser, useClerk } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,6 +16,7 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useColorScheme } from 'nativewind';
+import { authClient } from '@/lib/auth-client';
 
 const GlassCard = ({
   children,
@@ -74,12 +74,11 @@ const OptionRow = ({
 };
 
 const ProfilePage = () => {
-  const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user;
   const router = useRouter();
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -88,8 +87,7 @@ const ProfilePage = () => {
 
   useEffect(() => {
     if (user) {
-      setFirstName(user.firstName ?? '');
-      setLastName(user.lastName ?? '');
+      setDisplayName(user.name ?? '');
     }
   }, [user]);
 
@@ -99,7 +97,7 @@ const ProfilePage = () => {
     setError(null);
     setSuccessMsg(null);
     try {
-      await user.update({ firstName: firstName.trim(), lastName: lastName.trim() });
+      await authClient.updateUser({ name: displayName.trim() });
       setSuccessMsg('Profile updated');
       setTimeout(() => setSuccessMsg(null), 2500);
     } catch (err) {
@@ -116,19 +114,14 @@ const ProfilePage = () => {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
-      base64: true,
     });
     if (!result.canceled && result.assets[0]) {
       try {
         const asset = result.assets[0];
-        const base64 = asset.base64;
-        const mimeType = asset.mimeType ?? 'image/jpeg';
-        if (base64) {
-          await user.setProfileImage({ file: `data:${mimeType};base64,${base64}` });
-          setSuccessMsg('Profile photo updated');
-          setTimeout(() => setSuccessMsg(null), 2500);
-        }
-      } catch (err) {
+        await authClient.updateUser({ image: asset.uri });
+        setSuccessMsg('Profile photo updated');
+        setTimeout(() => setSuccessMsg(null), 2500);
+      } catch {
         Alert.alert('Error', 'Could not update photo. Try again.');
       }
     }
@@ -136,7 +129,7 @@ const ProfilePage = () => {
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await authClient.signOut();
       router.replace('/');
     } catch (err) {
       console.error(JSON.stringify(err, null, 2));
@@ -154,9 +147,9 @@ const ProfilePage = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await user?.delete();
+              await authClient.deleteUser();
               router.replace('/');
-            } catch (err) {
+            } catch {
               Alert.alert('Error', 'Could not delete account. Please try again.');
             }
           },
@@ -165,9 +158,9 @@ const ProfilePage = () => {
     );
   };
 
-  if (!isLoaded) return null;
+  if (isPending) return null;
 
-  const email = user?.primaryEmailAddress?.emailAddress ?? 'No email';
+  const email = user?.email ?? 'No email';
   const createdAt = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString('en-US', {
         month: 'short',
@@ -213,9 +206,9 @@ const ProfilePage = () => {
           <View className="mb-8 mt-4 items-center">
             <TouchableOpacity activeOpacity={0.8} onPress={handleChangePhoto}>
               <View className=" rounded-full border-2 border-purple-500 p-1 shadow-lg shadow-white/100">
-                {user?.imageUrl ? (
+                {user?.image ? (
                   <Image
-                    source={{ uri: user.imageUrl }}
+                    source={{ uri: user.image }}
                     className="h-[110px] w-[110px] rounded-full"
                     accessibilityLabel="Profile picture"
                   />
@@ -232,7 +225,7 @@ const ProfilePage = () => {
             </TouchableOpacity>
 
             <Text style={{ color: dk ? 'white' : '#3b0764' }} className="mt-4 text-xl font-bold">
-              {user?.fullName || `${firstName} ${lastName}`.trim() || 'Your Name'}
+              {user?.name || displayName.trim() || 'Your Name'}
             </Text>
             <Text style={{ color: dk ? '#9ca3af' : '#6b7280' }} className="mt-1 text-sm">{email}</Text>
             {createdAt && (
@@ -260,22 +253,7 @@ const ProfilePage = () => {
           </Text>
           <GlassCard>
             <View className="px-4 pb-2 pt-4">
-              <Text style={{ color: dk ? '#9ca3af' : '#6b7280' }} className="mb-1 text-xs font-medium">First Name</Text>
-              <TextInput
-                style={{
-                  borderColor: dk ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
-                  backgroundColor: dk ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                  color: dk ? '#ffffff' : '#1a1a2e',
-                }}
-                className="mb-3 w-full rounded-xl border px-4 py-3"
-                placeholder="First name"
-                placeholderTextColor={dk ? '#555' : '#9ca3af'}
-                value={firstName}
-                onChangeText={setFirstName}
-                editable={!isSaving}
-              />
-
-              <Text style={{ color: dk ? '#9ca3af' : '#6b7280' }} className="mb-1 text-xs font-medium">Last Name</Text>
+              <Text style={{ color: dk ? '#9ca3af' : '#6b7280' }} className="mb-1 text-xs font-medium">Name</Text>
               <TextInput
                 style={{
                   borderColor: dk ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
@@ -283,10 +261,10 @@ const ProfilePage = () => {
                   color: dk ? '#ffffff' : '#1a1a2e',
                 }}
                 className="mb-1 w-full rounded-xl border px-4 py-3"
-                placeholder="Last name"
+                placeholder="Your name"
                 placeholderTextColor={dk ? '#555' : '#9ca3af'}
-                value={lastName}
-                onChangeText={setLastName}
+                value={displayName}
+                onChangeText={setDisplayName}
                 editable={!isSaving}
               />
             </View>

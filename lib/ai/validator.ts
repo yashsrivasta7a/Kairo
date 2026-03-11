@@ -14,7 +14,7 @@ const FORBIDDEN_IMPORTS = [
   'uuid',
 ];
 
-const FORBIDDEN_INSTANTDB_TYPES = ['i.any(', 'i.json(', 'i.object(', 'i.array('];
+const FORBIDDEN_SCHEMA_TYPES = ['i.any(', 'i.json(', 'i.object(', 'i.array('];
 const FORBIDDEN_DB_CALLS = ['db.reset(', 'db.queryOnce(', 'db.pause(', 'db.resume('];
 
 export function validateCode(code: string): { valid: boolean; error?: string } {
@@ -28,15 +28,15 @@ export function validateCode(code: string): { valid: boolean; error?: string } {
     return { valid: false, error: 'Missing export default — app has no entry point.' };
   }
 
-  // 2. Hardcoded appId check
-  if (/appId\s*:\s*["']/.test(code)) {
-    return { valid: false, error: 'Hardcoded appId detected — must use the global variable instantAppId, not a string literal.' };
+  // 2. Hardcoded runtime identifier check
+  if (/(appId|buildId)\s*:\s*["']/.test(code)) {
+    return { valid: false, error: 'Hardcoded runtime identifier detected — generated apps must use the provided buildDataId value.' };
   }
 
-  // 3. Forbidden InstantDB schema types
-  for (const token of FORBIDDEN_INSTANTDB_TYPES) {
+  // 3. Forbidden schema types
+  for (const token of FORBIDDEN_SCHEMA_TYPES) {
     if (code.includes(token)) {
-      return { valid: false, error: `Forbidden InstantDB type "${token.replace('(', '')}" — only i.string(), i.number(), i.boolean() are allowed.` };
+      return { valid: false, error: `Forbidden schema type "${token.replace('(', '')}" — only i.string(), i.number(), i.boolean() are allowed.` };
     }
   }
 

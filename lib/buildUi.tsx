@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import codeToEl from './codeToEl';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type Props = { code: string; instantAppId: string };
+type Props = { code: string; buildId: string };
 
 // Error Boundary to catch rendering errors from generated code
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
@@ -35,12 +35,12 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError:
   }
 }
 
-function codeParser({ code, instantAppId }: Props) {
+function codeParser({ code, buildId }: Props) {
   try {
-    if (!instantAppId) {
-      throw new Error('instantAppId is missing or empty');
+    if (!buildId) {
+      throw new Error('buildId is missing or empty');
     }
-    const el = codeToEl(instantAppId, code);
+    const el = codeToEl(buildId, code);
     return { el };
   } catch (error) {
     console.error('BuildUi Error:', error);
@@ -48,8 +48,8 @@ function codeParser({ code, instantAppId }: Props) {
   }
 }
 
-const BuildUi: React.FC<Props> = ({ code, instantAppId }) => {
-  const parsed = useMemo(() => codeParser({ code, instantAppId }), [code, instantAppId]);
+const BuildUi: React.FC<Props> = ({ code, buildId }) => {
+  const parsed = useMemo(() => codeParser({ code, buildId }), [code, buildId]);
   
   return (
     <SafeAreaView style={{ flex: 1 }}>

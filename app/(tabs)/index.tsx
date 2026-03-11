@@ -13,13 +13,12 @@ import {
 import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useUser } from '@clerk/clerk-expo';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import UserProfile from 'components/userProfile';
-import { useBuilds } from '../../lib/instant/useBuilds';
+import { useBuilds } from '../../lib/useBuilds';
 import { useCreateModalStore } from '../../lib/store';
 import { useTheme } from '../../constants/ThemeContext';
 import GlowCard from 'components/ui/GlowCard';
@@ -31,6 +30,7 @@ import TipBanner from 'components/ui/TipBanner';
 import Orb from 'components/ui/Orb';
 import Spinner from 'components/ui/Spinner';
 import EmptyState from 'components/ui/EmptyState';
+import { authClient } from '@/lib/auth-client';
 
 const GAP = 8;
 const SIDE = 20;
@@ -44,7 +44,6 @@ function getGreeting() {
 }
 
 export default function HomeScreen() {
-  const { user, isLoaded } = useUser();
   const router = useRouter();
   const { open } = useCreateModalStore();
   const { builds, isLoading } = useBuilds();
@@ -84,21 +83,17 @@ export default function HomeScreen() {
   const deployed = builds.filter((b: any) => b.status === 'completed').length;
   const building = builds.filter((b: any) => b.status === 'generating').length;
 
-  if (!isLoaded)
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: dk ? '#09090f' : '#f5f3ff' }}>
-        <Spinner />
-      </View>
-    );
-
   return (
     <View style={{ flex: 1, backgroundColor: dk ? '#09090f' : '#f5f3ff' }}>
       <StatusBar barStyle={dk ? 'light-content' : 'dark-content'} />
 
-
       <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
         <LinearGradient
-          colors={dk ? ['#09090f', '#0e0a1f', '#130d2a', '#1a1035', '#2a1554', '#3b0764'] : ['#f5f3ff', '#ede9fe', '#ddd6fe', '#c4b5fd', '#a78bfa', '#7c3aed']}
+          colors={
+            dk
+              ? ['#09090f', '#0e0a1f', '#130d2a', '#1a1035', '#2a1554', '#3b0764']
+              : ['#f5f3ff', '#ede9fe', '#ddd6fe', '#c4b5fd', '#a78bfa', '#7c3aed']
+          }
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
           style={StyleSheet.absoluteFillObject}
@@ -124,7 +119,6 @@ export default function HomeScreen() {
               tintColor="#7c3aed"
             />
           }>
-
           <Animated.View
             style={{
               flexDirection: 'row',
@@ -138,31 +132,58 @@ export default function HomeScreen() {
               ],
             }}>
             <View>
-              <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 14, color: dk ? '#a78bfa' : '#6b7280' }}>{getGreeting()}</Text>
-              <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 30, color: dk ? '#e9d5ff' : '#3b0764', lineHeight: 36 }}>
-                {user?.firstName || 'Builder'}
+              <Text
+                style={{
+                  fontFamily: 'DMSans_400Regular',
+                  fontSize: 14,
+                  color: dk ? '#a78bfa' : '#6b7280',
+                }}>
+                {getGreeting()}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: 'DMSans_700Bold',
+                  fontSize: 30,
+                  color: dk ? '#e9d5ff' : '#3b0764',
+                  lineHeight: 36,
+                }}>
+                {'Builder'}
               </Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <TouchableOpacity
                 onPress={toggleTheme}
-                style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: dk ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.1)', borderWidth: 1, borderColor: dk ? 'rgba(124,58,237,0.5)' : 'rgba(124,58,237,0.25)' }}>
-                <Ionicons name={dk ? 'sunny-outline' : 'moon-outline'} size={16} color={dk ? '#c4b5fd' : '#7c3aed'} />
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: dk ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.1)',
+                  borderWidth: 1,
+                  borderColor: dk ? 'rgba(124,58,237,0.5)' : 'rgba(124,58,237,0.25)',
+                }}>
+                <Ionicons
+                  name={dk ? 'sunny-outline' : 'moon-outline'}
+                  size={16}
+                  color={dk ? '#c4b5fd' : '#7c3aed'}
+                />
               </TouchableOpacity>
-              <UserProfile className="p-3 rounded-full ml-2" size={34} />
+              <UserProfile />
             </View>
           </Animated.View>
 
-          <View className='px-3'>
-
+          <View className="px-3">
             <TipBanner />
           </View>
 
-
           <View className="relative mb-2" style={{ borderRadius: 28, overflow: 'hidden' }}>
-
             <LinearGradient
-              colors={dk ? ['#13102a', '#13102a', '#13102a', '#13102a'] : ['#ffffff', '#ffffff', '#ffffff', '#ffffff']}
+              colors={
+                dk
+                  ? ['#13102a', '#13102a', '#13102a', '#13102a']
+                  : ['#ffffff', '#ffffff', '#ffffff', '#ffffff']
+              }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
@@ -194,19 +215,34 @@ export default function HomeScreen() {
             />
 
             <View className="flex-row gap-2 p-3">
-
               <GlowCard
                 style={{ flex: 1.55, height: 260 }}
                 glowColor="#7c3aed"
                 glowOpacity={dk ? 0.5 : 0.35}
                 innerBg={dk ? 'rgba(124,58,237,0.22)' : 'rgba(124,58,237,0.08)'}>
                 <View className="flex-1 justify-between">
-
                   <View className="flex-row items-center justify-between">
-                    <View style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: 10, borderWidth: 1, borderColor: dk ? 'rgba(167,139,250,0.3)' : '#e9d5ff', backgroundColor: dk ? 'rgba(124,58,237,0.2)' : '#f3e8ff' }}>
+                    <View
+                      style={{
+                        width: 36,
+                        height: 36,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 10,
+                        borderWidth: 1,
+                        borderColor: dk ? 'rgba(167,139,250,0.3)' : '#e9d5ff',
+                        backgroundColor: dk ? 'rgba(124,58,237,0.2)' : '#f3e8ff',
+                      }}>
                       <Ionicons name="apps-sharp" size={16} color={dk ? '#a78bfa' : '#7c3aed'} />
                     </View>
-                    <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: dk ? '#a78bfa' : '#9333ea' }}>ALL TIME</Text>
+                    <Text
+                      style={{
+                        fontFamily: 'DMSans_400Regular',
+                        fontSize: 12,
+                        color: dk ? '#a78bfa' : '#9333ea',
+                      }}>
+                      ALL TIME
+                    </Text>
                   </View>
                   <Text
                     style={{
@@ -224,15 +260,26 @@ export default function HomeScreen() {
                     {total}
                   </Text>
 
-
                   <View className="items-start">
                     <CountUp
                       to={total}
-                      style={{ fontSize: 58, lineHeight: 60, letterSpacing: -2, fontFamily: 'DMSans_700Bold', color: dk ? '#e9d5ff' : '#3b0764' }}
+                      style={{
+                        fontSize: 58,
+                        lineHeight: 60,
+                        letterSpacing: -2,
+                        fontFamily: 'DMSans_700Bold',
+                        color: dk ? '#e9d5ff' : '#3b0764',
+                      }}
                     />
-                    <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 14, color: dk ? '#d8b4fe' : '#581c87' }}>Total Apps</Text>
+                    <Text
+                      style={{
+                        fontFamily: 'DMSans_400Regular',
+                        fontSize: 14,
+                        color: dk ? '#d8b4fe' : '#581c87',
+                      }}>
+                      Total Apps
+                    </Text>
                   </View>
-
 
                   <View>
                     <View
@@ -241,14 +288,28 @@ export default function HomeScreen() {
                         justifyContent: 'space-between',
                         marginBottom: 5,
                       }}>
-                      <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 10, color: dk ? '#c4b5fd' : '#7e22ce' }}>Deployed</Text>
-                      <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 10, color: dk ? '#a78bfa' : '#9333ea' }}>
+                      <Text
+                        style={{
+                          fontFamily: 'DMSans_400Regular',
+                          fontSize: 10,
+                          color: dk ? '#c4b5fd' : '#7e22ce',
+                        }}>
+                        Deployed
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: 'DMSans_400Regular',
+                          fontSize: 10,
+                          color: dk ? '#a78bfa' : '#9333ea',
+                        }}>
                         {total > 0 ? Math.round((deployed / total) * 100) : 0}%
                       </Text>
                     </View>
                     <View
                       className="h-1 rounded-md"
-                      style={{ backgroundColor: dk ? 'rgba(124,58,237,0.25)' : 'rgba(124,58,237,0.1)' }}>
+                      style={{
+                        backgroundColor: dk ? 'rgba(124,58,237,0.25)' : 'rgba(124,58,237,0.1)',
+                      }}>
                       <View
                         style={{
                           height: 4,
@@ -269,7 +330,14 @@ export default function HomeScreen() {
                             marginRight: 4,
                           }}
                         />
-                        <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: dk ? '#d8b4fe' : '#6d28d9' }}>{deployed} live</Text>
+                        <Text
+                          style={{
+                            fontFamily: 'DMSans_400Regular',
+                            fontSize: 12,
+                            color: dk ? '#d8b4fe' : '#6d28d9',
+                          }}>
+                          {deployed} live
+                        </Text>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <View
@@ -281,7 +349,12 @@ export default function HomeScreen() {
                             marginRight: 4,
                           }}
                         />
-                        <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: dk ? '#d8b4fe' : '#6d28d9' }}>
+                        <Text
+                          style={{
+                            fontFamily: 'DMSans_400Regular',
+                            fontSize: 12,
+                            color: dk ? '#d8b4fe' : '#6d28d9',
+                          }}>
                           {building} building
                         </Text>
                       </View>
@@ -290,9 +363,7 @@ export default function HomeScreen() {
                 </View>
               </GlowCard>
 
-
               <View style={{ flex: 1, gap: GAP }}>
-
                 <GlowCard
                   style={{ flex: 1 }}
                   glowColor="#7c3aed"
@@ -316,14 +387,33 @@ export default function HomeScreen() {
                     </Text>
                     <View className="mb-1 flex-row items-center">
                       <Pulse color="#7c3aed" />
-                      <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: dk ? '#c4b5fd' : '#7c3aed' }}>
+                      <Text
+                        style={{
+                          fontFamily: 'DMSans_600SemiBold',
+                          fontSize: 12,
+                          color: dk ? '#c4b5fd' : '#7c3aed',
+                        }}>
                         LIVE
                       </Text>
                     </View>
-                    <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 36, color: dk ? '#e9d5ff' : '#3b0764', lineHeight: 42 }}>
+                    <Text
+                      style={{
+                        fontFamily: 'DMSans_700Bold',
+                        fontSize: 36,
+                        color: dk ? '#e9d5ff' : '#3b0764',
+                        lineHeight: 42,
+                      }}>
                       {deployed}
                     </Text>
-                    <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, marginTop: 4, color: dk ? '#c4b5fd' : '#7e22ce' }}>of {total} total</Text>
+                    <Text
+                      style={{
+                        fontFamily: 'DMSans_400Regular',
+                        fontSize: 12,
+                        marginTop: 4,
+                        color: dk ? '#c4b5fd' : '#7e22ce',
+                      }}>
+                      of {total} total
+                    </Text>
                     <View
                       style={{
                         flexDirection: 'row',
@@ -335,13 +425,22 @@ export default function HomeScreen() {
                       {Array.from({ length: Math.min(total, 8) }).map((_, i) => (
                         <View
                           key={i}
-                          style={{ width: 6, height: 6, borderRadius: 2, backgroundColor: i < deployed ? '#a78bfa' : (dk ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)') }}
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: 2,
+                            backgroundColor:
+                              i < deployed
+                                ? '#a78bfa'
+                                : dk
+                                  ? 'rgba(255,255,255,0.1)'
+                                  : 'rgba(0,0,0,0.12)',
+                          }}
                         />
                       ))}
                     </View>
                   </View>
                 </GlowCard>
-
 
                 <GlowCard
                   style={{ flex: 1 }}
@@ -351,14 +450,33 @@ export default function HomeScreen() {
                   <View style={{ flex: 1 }}>
                     <View className="mb-1 flex-row items-center">
                       <Pulse color="#a78bfa" />
-                      <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: dk ? '#c4b5fd' : '#7c3aed' }}>
+                      <Text
+                        style={{
+                          fontFamily: 'DMSans_600SemiBold',
+                          fontSize: 12,
+                          color: dk ? '#c4b5fd' : '#7c3aed',
+                        }}>
                         BUILDING
                       </Text>
                     </View>
-                    <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 36, color: dk ? '#e9d5ff' : '#3b0764', lineHeight: 42 }}>
+                    <Text
+                      style={{
+                        fontFamily: 'DMSans_700Bold',
+                        fontSize: 36,
+                        color: dk ? '#e9d5ff' : '#3b0764',
+                        lineHeight: 42,
+                      }}>
                       {building}
                     </Text>
-                    <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, marginTop: 4, color: dk ? '#c4b5fd' : '#7c3aed' }}>in progress</Text>
+                    <Text
+                      style={{
+                        fontFamily: 'DMSans_400Regular',
+                        fontSize: 12,
+                        marginTop: 4,
+                        color: dk ? '#c4b5fd' : '#7c3aed',
+                      }}>
+                      in progress
+                    </Text>
                     <View
                       style={{
                         flexDirection: 'row',
@@ -381,7 +499,13 @@ export default function HomeScreen() {
                               width: 7,
                               height: 7,
                               borderRadius: 2,
-                              backgroundColor: isActive ? (dk ? 'rgba(124,58,237,0.3)' : 'rgba(124,58,237,0.15)') : (dk ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)'),
+                              backgroundColor: isActive
+                                ? dk
+                                  ? 'rgba(124,58,237,0.3)'
+                                  : 'rgba(124,58,237,0.15)'
+                                : dk
+                                  ? 'rgba(255,255,255,0.08)'
+                                  : 'rgba(0,0,0,0.07)',
                               overflow: 'hidden',
                             }}>
                             <Animated.View
@@ -404,9 +528,7 @@ export default function HomeScreen() {
               </View>
             </View>
 
-
             <View className="flex-row gap-2 px-3 pb-3">
-
               <GlowCard
                 style={{ flex: 1.55, height: 138 }}
                 glowColor="#7c3aed"
@@ -433,7 +555,7 @@ export default function HomeScreen() {
                       style={{ letterSpacing: -0.5 }}>
                       New App
                     </Text>
-                    <Text className="font-dmsans mt-0.5 text-[12px] text-white/90">
+                    <Text className="mt-0.5 font-dmsans text-[12px] text-white/90">
                       Build with AI →{'  '}
                       <Text className="text-white/95">60%</Text>
                     </Text>
@@ -454,7 +576,6 @@ export default function HomeScreen() {
                 </LinearGradient>
               </GlowCard>
 
-
               <GlowCard
                 style={{ flex: 1, height: 138 }}
                 glowColor="#7c3aed"
@@ -462,12 +583,37 @@ export default function HomeScreen() {
                 innerBg={dk ? 'rgba(124,58,237,0.18)' : 'rgba(124,58,237,0.06)'}
                 onPress={() => router.push('/(tabs)/explore')}>
                 <View style={{ flex: 1, justifyContent: 'space-between' }}>
-                  <View style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: 10, borderWidth: 1, borderColor: dk ? 'rgba(167,139,250,0.3)' : '#e9d5ff', backgroundColor: dk ? 'rgba(124,58,237,0.2)' : '#f3e8ff' }}>
+                  <View
+                    style={{
+                      width: 36,
+                      height: 36,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 10,
+                      borderWidth: 1,
+                      borderColor: dk ? 'rgba(167,139,250,0.3)' : '#e9d5ff',
+                      backgroundColor: dk ? 'rgba(124,58,237,0.2)' : '#f3e8ff',
+                    }}>
                     <Ionicons name="globe-outline" size={16} color={dk ? '#a78bfa' : '#7c3aed'} />
                   </View>
                   <View>
-                    <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 20, color: dk ? '#e9d5ff' : '#3b0764' }}>Explore</Text>
-                    <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, marginTop: 4, color: dk ? '#c4b5fd' : '#7e22ce' }}>Community</Text>
+                    <Text
+                      style={{
+                        fontFamily: 'DMSans_700Bold',
+                        fontSize: 20,
+                        color: dk ? '#e9d5ff' : '#3b0764',
+                      }}>
+                      Explore
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: 'DMSans_400Regular',
+                        fontSize: 12,
+                        marginTop: 4,
+                        color: dk ? '#c4b5fd' : '#7e22ce',
+                      }}>
+                      Community
+                    </Text>
                   </View>
                   <Ionicons
                     name="globe-outline"
@@ -486,7 +632,6 @@ export default function HomeScreen() {
             </View>
           </View>
 
-
           <GlowCard
             style={{ marginBottom: GAP }}
             glowColor="#7c3aed"
@@ -500,9 +645,23 @@ export default function HomeScreen() {
                 alignItems: 'center',
                 marginBottom: 4,
               }}>
-              <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 14, color: dk ? '#d8b4fe' : '#3b0764' }}>Recent Apps</Text>
+              <Text
+                style={{
+                  fontFamily: 'DMSans_600SemiBold',
+                  fontSize: 14,
+                  color: dk ? '#d8b4fe' : '#3b0764',
+                }}>
+                Recent Apps
+              </Text>
               <TouchableOpacity>
-                <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: dk ? '#a78bfa' : '#7c3aed' }}>See all</Text>
+                <Text
+                  style={{
+                    fontFamily: 'DMSans_400Regular',
+                    fontSize: 12,
+                    color: dk ? '#a78bfa' : '#7c3aed',
+                  }}>
+                  See all
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -524,9 +683,7 @@ export default function HomeScreen() {
             )}
           </GlowCard>
 
-
           <View style={{ flexDirection: 'row', gap: GAP, marginHorizontal: 10 }}>
-
             <GlowCard
               style={{ flex: 1, height: 152 }}
               glowColor="#a78bfa"
@@ -534,38 +691,63 @@ export default function HomeScreen() {
               innerBg={dk ? 'rgba(167,139,250,0.12)' : 'rgba(167,139,250,0.06)'}
               onPress={() => router.push('/profile')}>
               <View style={{ flex: 1, justifyContent: 'space-between' }}>
-
                 <Ionicons
                   name="person-circle"
                   size={100}
                   color="#a78bfa"
                   style={{ position: 'absolute', right: -18, bottom: -14, opacity: 0.07 }}
                 />
-
-                {user?.imageUrl ? (
-                  <View style={{
-                    width: 44, height: 44, borderRadius: 14,
-                    overflow: 'hidden', borderWidth: 2,
-                    borderColor: 'rgba(168,85,247,0.6)', backgroundColor: '#1a0f35',
+                (
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 14,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#2e1065',
                   }}>
-                    <Image source={{ uri: user.imageUrl }} style={{ width: 44, height: 44 }} />
-                  </View>
-                ) : (
-                  <View style={{ width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: '#2e1065' }}>
-                    <Ionicons name="person" size={22} color="#a855f7" />
-                  </View>
-                )}
-
+                  <Ionicons name="person" size={22} color="#a855f7" />
+                </View>
+                )
                 <View>
-                  <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 15, color: dk ? '#e9d5ff' : '#3b0764' }} numberOfLines={1}>
-                    {user?.firstName || 'Profile'}
+                  <Text
+                    style={{
+                      fontFamily: 'DMSans_700Bold',
+                      fontSize: 15,
+                      color: dk ? '#e9d5ff' : '#3b0764',
+                    }}
+                    numberOfLines={1}>
+                    {'Profile'}
                   </Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2, gap: 6 }}>
-                    <View style={{ backgroundColor: dk ? 'rgba(124,58,237,0.25)' : 'rgba(124,58,237,0.1)', borderRadius: 20, paddingHorizontal: 7, paddingVertical: 2 }}>
-                      <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 10, color: dk ? '#a78bfa' : '#7c3aed' }}>{total} apps</Text>
+                  <View
+                    style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2, gap: 6 }}>
+                    <View
+                      style={{
+                        backgroundColor: dk ? 'rgba(124,58,237,0.25)' : 'rgba(124,58,237,0.1)',
+                        borderRadius: 20,
+                        paddingHorizontal: 7,
+                        paddingVertical: 2,
+                      }}>
+                      <Text
+                        style={{
+                          fontFamily: 'DMSans_500Medium',
+                          fontSize: 10,
+                          color: dk ? '#a78bfa' : '#7c3aed',
+                        }}>
+                        {total} apps
+                      </Text>
                     </View>
                   </View>
-                  <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 11, marginTop: 6, color: dk ? '#a78bfa' : '#7c3aed' }}>View profile →</Text>
+                  <Text
+                    style={{
+                      fontFamily: 'DMSans_400Regular',
+                      fontSize: 11,
+                      marginTop: 6,
+                      color: dk ? '#a78bfa' : '#7c3aed',
+                    }}>
+                    View profile →
+                  </Text>
                 </View>
               </View>
             </GlowCard>
@@ -582,7 +764,6 @@ export default function HomeScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{ flex: 1, borderRadius: 20, padding: 16, justifyContent: 'space-between' }}>
-
                 <Ionicons
                   name="sparkles"
                   size={110}
@@ -591,23 +772,50 @@ export default function HomeScreen() {
                 />
 
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                  <View
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 8,
+                      backgroundColor: 'rgba(255,255,255,0.15)',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
                     <Ionicons name="flash" size={14} color="#fff" />
                   </View>
-                  <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 11, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.5 }}>AI BUILDER</Text>
+                  <Text
+                    style={{
+                      fontFamily: 'DMSans_500Medium',
+                      fontSize: 11,
+                      color: 'rgba(255,255,255,0.7)',
+                      letterSpacing: 0.5,
+                    }}>
+                    AI BUILDER
+                  </Text>
                 </View>
 
                 <View>
-                  <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 18, color: '#fff', lineHeight: 24, letterSpacing: -0.4 }}>
+                  <Text
+                    style={{
+                      fontFamily: 'DMSans_700Bold',
+                      fontSize: 18,
+                      color: '#fff',
+                      lineHeight: 24,
+                      letterSpacing: -0.4,
+                    }}>
                     Describe it.{'\n'}Ship it.
                   </Text>
                   <TouchableOpacity
                     onPress={open}
                     style={{
-                      marginTop: 10, alignSelf: 'flex-start',
+                      marginTop: 10,
+                      alignSelf: 'flex-start',
                       backgroundColor: 'rgba(255,255,255,0.18)',
-                      borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5,
-                      borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
+                      borderRadius: 999,
+                      paddingHorizontal: 12,
+                      paddingVertical: 5,
+                      borderWidth: 1,
+                      borderColor: 'rgba(255,255,255,0.25)',
                     }}>
                     <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 11, color: '#fff' }}>
                       Build now →

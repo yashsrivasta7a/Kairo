@@ -17,7 +17,7 @@ export default {
   expo: {
     name: appName,
     slug: 'Kairo',
-    scheme: 'Kairo',
+    scheme: 'kairo',
     version: '1.0.0',
     web: {
       output: 'server',
@@ -26,7 +26,7 @@ export default {
     experiments: {
       tsconfigPaths: true,
     },
-    plugins: ['expo-router'],
+    plugins: ['expo-router', 'expo-secure-store'],
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',

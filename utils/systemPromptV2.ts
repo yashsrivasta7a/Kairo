@@ -255,10 +255,10 @@ export function getGluePrompt(spec: any, screenCodes: string[]): string {
 - If even ONE character inside a screen function is changed, this is a FAILURE
 - Glue code must ONLY assemble, never modify logic
 
-⚠️ APP ID RULE:
-- The variable instantAppId is provided globally
-- NEVER hardcode appId strings
-- ALWAYS use: init({ appId: instantAppId, schema })
+⚠️ RUNTIME ID RULE:
+- The variable buildDataId is provided globally
+- NEVER hardcode build IDs
+- ALWAYS use: init({ buildId: buildDataId, schema })
 
 APP SPEC:
 ${JSON.stringify(spec, null, 2)}
@@ -273,7 +273,7 @@ YOUR JOB: assemble the final app in this EXACT order
 STEP 1 — IMPORTS (copy exactly):
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ActivityIndicator, FlatList, TextInput, ScrollView, Modal, Alert, Animated, KeyboardAvoidingView, Platform, Switch } from 'react-native';
-import { init, id, i } from '@instantdb/react-native';
+import { init, id, i } from '@kairo/runtime';
 
 ${hasData ? `STEP 2 — SCHEMA (copy exactly — already built from spec):
 const schema = i.schema({
@@ -282,15 +282,15 @@ ${schemaEntities}
   },
 });
 
-⚠️ INSTANTDB SCHEMA RULES:
+⚠️ RUNTIME SCHEMA RULES:
 ✅ Valid types ONLY: i.string(), i.number(), i.boolean()
 ✅ Add .indexed() on any field that needs filtering/sorting
 ❌ NEVER use: i.any(), i.json(), i.object(), i.array()
 ❌ NEVER add links — use foreign key string fields instead
 
 STEP 3 — DB INIT:
-const db = init({ appId: instantAppId, schema });
-⚠️ ALWAYS use the global variable instantAppId — NEVER hardcode an app ID.` :
+const db = init({ buildId: buildDataId, schema });
+⚠️ ALWAYS use the global variable buildDataId — NEVER hardcode a build ID.` :
       `STEP 2 — NO SCHEMA NEEDED:
 This app has no persistent data. Just add:
 const db = null; // no data needed`}
@@ -314,7 +314,7 @@ ${hasData ? `
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0A0A0F' }}>
       <StatusBar barStyle="light-content" />
       <View style={{ flex: 1 }}>
-        ${screenNames.map(name => `{activeTab === '${name}' && <${name} db={db} id={id} data={data} isLoading={isLoading} />}`).join('\n        ')}
+        ${screenNames.map((name: string) => `{activeTab === '${name}' && <${name} db={db} id={id} data={data} isLoading={isLoading} />}`).join('\n        ')}
       </View>
       ${screenNames.length > 1 ? `<View style={tabStyles.tabBar}>
         {${JSON.stringify(screenNames)}.map(tab => (
@@ -344,7 +344,7 @@ FINAL OUTPUT RULES:
 - Start with: import React
 - End with closing brace of export default function App()
 - NEVER use db.reset(), db.queryOnce(), db.pause()
-- NEVER import TypeScript types from InstantDB
+- NEVER import TypeScript types from the Kairo runtime
 - NEVER sort inside useQuery — sort in JS
-- NEVER hardcode instantAppId`;
+- NEVER hardcode buildDataId`;
 }

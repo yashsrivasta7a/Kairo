@@ -14,6 +14,11 @@ type DropDownProps = {
   onChange?: (value: string) => void;
 };
 
+type DropDownItem = {
+  label: string;
+  value: string;
+};
+
 const DropDown: React.FC<DropDownProps> = ({
   label,
   items,
@@ -109,9 +114,9 @@ const DropDown: React.FC<DropDownProps> = ({
             style={[StyleSheet.absoluteFill, { borderRadius: 24 }]}
             pointerEvents="none"
           />
-          <BottomSheetFlatList
+          <BottomSheetFlatList<DropDownItem>
             data={[...items].reverse()}
-            keyExtractor={(item) => item.value}
+            keyExtractor={(item: DropDownItem) => item.value}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingVertical: 8 }}
@@ -133,7 +138,7 @@ const DropDown: React.FC<DropDownProps> = ({
                 </Text>
               </View>
             }
-            renderItem={({ item, index }) => {
+            renderItem={({ item, index }: { item: DropDownItem; index: number }) => {
               const selected = item.value === value;
               return (
                 <TouchableOpacity

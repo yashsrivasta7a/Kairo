@@ -13,29 +13,22 @@ import React from 'react';
 import { useCreateModalStore } from '../../lib/store';
 import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
-import { useUser } from '@clerk/clerk-expo';
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 export default function Create() {
   const { isOpen, close, appName, setAppName, setBuildId, isCreating, setIsCreating } = useCreateModalStore();
-  const { user } = useUser();
+  const createBuild = useMutation(api.builds.create);
 
   const handleCreate = async () => {
-    if (!appName.trim() || !user?.id) return;
+    if (!appName.trim()) return;
 
     setIsCreating(true);
     try {
-      const response = await fetch('/api/create-build', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, appName: appName.trim() }),
-      });
-
-      if (response.ok) {
-        const { buildId, slug } = await response.json();
-        setBuildId(buildId);
-        close();
-        router.push(`/(builder)/${buildId}`);
-      }
+      const { buildId } = await createBuild({ appName: appName.trim() });
+      setBuildId(buildId);
+      close();
+      router.push(`/(builder)/${buildId}`);
     } catch (err) {
       console.error('Failed to create build:', err);
     } finally {
