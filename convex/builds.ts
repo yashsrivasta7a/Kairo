@@ -28,7 +28,7 @@ function toBuildView(build: Doc<"builds">) {
     appName: build.appName,
     slug: build.slug,
     storageId: build.storageId ?? null,
-    hasCode: Boolean(build.storageId || build.code),
+    hasCode: Boolean(build.storageId),
     status: build.status,
     stage: build.stage,
     error: build.error,

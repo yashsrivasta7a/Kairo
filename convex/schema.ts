@@ -18,7 +18,6 @@ export default defineSchema({
     ownerId: v.string(),
     appName: v.string(),
     slug: v.string(),
-    code: v.optional(v.string()),
     storageId: v.optional(v.id("_storage")),
     status: buildStatus,
     stage: buildStage,
