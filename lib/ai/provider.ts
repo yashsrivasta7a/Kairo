@@ -1,7 +1,7 @@
-import { createAzure } from "@ai-sdk/azure";
-import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createAzure } from "@ai-sdk/azure";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
 import type { LanguageModel } from "ai";
 
 export type ModelProvider = "Azure" | "OpenAI" | "Anthropic" | "Google";
@@ -26,7 +26,11 @@ function has(value: string | undefined) {
   return Boolean(value && value.trim().length > 0);
 }
 
-export function resolveProvider(preferred?: ModelProvider, modelChoice?: string, overrides?: ProviderOverrides): ResolvedProvider {
+export function resolveProvider(
+  preferred?: ModelProvider,
+  modelChoice?: string,
+  overrides?: ProviderOverrides
+): ResolvedProvider {
   const azureEndpoint = overrides?.azureEndpoint || process.env.AZURE_OPENAI_ENDPOINT;
   const azureApiKey = overrides?.azureApiKey || process.env.AZURE_OPENAI_API_KEY;
   const azureDeployment = overrides?.azureDeploymentName || process.env.AZURE_OPENAI_DEPLOYMENT_NAME;

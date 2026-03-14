@@ -3,17 +3,17 @@ import { useAction, useMutation, useQuery } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Modal,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "../../convex/_generated/api";
@@ -220,7 +220,8 @@ export default function BuildScreen() {
         {!!aiSettings && (
           <View className="mt-2 rounded-md bg-slate-500/15 px-3 py-2">
             <Text style={{ color: dk ? "#cbd5e1" : "#334155" }} className="text-xs">
-              Quota: {aiSettings.monthlyTokenUsed}/{aiSettings.monthlyTokenLimit} used, {aiSettings.remainingTokens} remaining
+              Quota: {aiSettings.monthlyTokenUsed}/{aiSettings.monthlyTokenLimit} used, {aiSettings.remainingTokens}{" "}
+              remaining
             </Text>
           </View>
         )}
@@ -332,8 +333,8 @@ export default function BuildScreen() {
                         Token Usage
                       </Text>
                       <Text className="text-xs text-slate-200">
-                        prompt {currentBuild.usagePromptTokens ?? 0} • completion {currentBuild.usageCompletionTokens ?? 0}
-                        {" "}• total {currentBuild.usageTotalTokens}
+                        prompt {currentBuild.usagePromptTokens ?? 0} • completion{" "}
+                        {currentBuild.usageCompletionTokens ?? 0} • total {currentBuild.usageTotalTokens}
                       </Text>
                     </View>
                   )}
@@ -517,7 +518,10 @@ export default function BuildScreen() {
                     </Text>
                   ) : (
                     (currentBuild?.debugTrace || []).map((entry: any, index: number) => (
-                      <View key={`${entry.updatedAt}-${index}`} className="mb-3 rounded-lg border border-cyan-400/20 bg-cyan-950/15 p-3">
+                      <View
+                        key={`${entry.updatedAt}-${index}`}
+                        className="mb-3 rounded-lg border border-cyan-400/20 bg-cyan-950/15 p-3"
+                      >
                         <Text className="text-xs font-semibold text-cyan-300">
                           {entry.stage} • {entry.provider} • {entry.model}
                         </Text>

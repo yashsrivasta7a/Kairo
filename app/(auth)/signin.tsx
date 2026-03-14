@@ -44,7 +44,9 @@ export default function SignInPage() {
         className="mb-4 h-12 w-full flex-row items-center justify-center gap-2 rounded-lg bg-white active:opacity-90"
       >
         <Ionicons name="logo-google" size={20} color="black" />
-        <Text className="text-base font-medium text-black">{isSigningIn ? "Connecting..." : "Continue With Google"}</Text>
+        <Text className="text-base font-medium text-black">
+          {isSigningIn ? "Connecting..." : "Continue With Google"}
+        </Text>
       </Pressable>
 
       {/* SIGN IN WITH GITHUB */}

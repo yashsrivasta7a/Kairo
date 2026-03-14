@@ -18,9 +18,7 @@ export function generationTools() {
     lookupDocs: tool({
       description: "Lookup implementation guidance for React Native, Convex runtime usage, and styling.",
       inputSchema: z.object({
-        topic: z
-          .enum(["react-native-list", "react-native-state", "convex", "styling"])
-          .describe("Guidance topic"),
+        topic: z.enum(["react-native-list", "react-native-state", "convex", "styling"]).describe("Guidance topic"),
       }),
       execute: async ({ topic }) => {
         return { topic, guidance: docsByTopic[topic] };

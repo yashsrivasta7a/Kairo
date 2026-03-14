@@ -7,12 +7,7 @@
     "excalidraw": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "-y",
-        "@cmd8/excalidraw-mcp",
-        "--diagram",
-        "${workspaceFolder}/diagrams/workspace.excalidraw"
-      ]
+      "args": ["-y", "@cmd8/excalidraw-mcp", "--diagram", "${workspaceFolder}/diagrams/workspace.excalidraw"]
     }
   }
 }

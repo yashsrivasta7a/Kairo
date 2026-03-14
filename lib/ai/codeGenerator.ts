@@ -170,7 +170,12 @@ export async function runPipeline({
     });
 
     const specStagePrompt = getSpecPrompt();
-    const { text: specText, usage: specUsage, provider: specProvider, model: specModel } = await runStageGeneration({
+    const {
+      text: specText,
+      usage: specUsage,
+      provider: specProvider,
+      model: specModel,
+    } = await runStageGeneration({
       stagePrompt: specStagePrompt,
       prompt: compacted.prompt,
       modelProvider,
@@ -211,7 +216,12 @@ export async function runPipeline({
     const screenCodes: string[] = [];
     for (const screen of spec.screens) {
       const stagePrompt = getScreenPrompt(spec, screen);
-      const { text: screenCode, usage, provider, model } = await runStageGeneration({
+      const {
+        text: screenCode,
+        usage,
+        provider,
+        model,
+      } = await runStageGeneration({
         stagePrompt,
         prompt: `Write the ${screen.name} screen.`,
         modelProvider,
@@ -237,7 +247,12 @@ export async function runPipeline({
     });
 
     const gluePrompt = getGluePrompt(spec, screenCodes);
-    const { text: rawFinalCode, usage: glueUsage, provider: glueProvider, model: glueModel } = await runStageGeneration({
+    const {
+      text: rawFinalCode,
+      usage: glueUsage,
+      provider: glueProvider,
+      model: glueModel,
+    } = await runStageGeneration({
       stagePrompt: gluePrompt,
       prompt: "Assemble the final app.",
       modelProvider,
@@ -297,7 +312,12 @@ export async function runPipeline({
 
       const fixStagePrompt =
         "You are a code fixer. Output ONLY the corrected JavaScript code. No markdown fences. No explanation.";
-      const { text: fixedRaw, usage: fixUsage, provider: fixProvider, model: fixModel } = await runStageGeneration({
+      const {
+        text: fixedRaw,
+        usage: fixUsage,
+        provider: fixProvider,
+        model: fixModel,
+      } = await runStageGeneration({
         stagePrompt: fixStagePrompt,
         prompt: `This React Native code has an error (attempt ${attempt}/${MAX_FIX_ATTEMPTS}):\n\nERROR: ${errorMsg}\n\nFix ONLY that error. Output the entire corrected file with NO markdown.${finalAttemptInstruction}\n\nCODE:\n${codeToFix}`,
         modelProvider,

@@ -42,7 +42,10 @@ function hardCap(text: string, maxChars: number) {
 
 export function compactUserPrompt(prompt: string): CompactPromptResult {
   const original = prompt || "";
-  const normalized = original.replace(/\t/g, "  ").replace(/\n{3,}/g, "\n\n").trim();
+  const normalized = original
+    .replace(/\t/g, "  ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
   const deduped = dedupeConsecutiveLines(normalized);
   const capped = hardCap(deduped, MAX_PROMPT_CHARS);
 

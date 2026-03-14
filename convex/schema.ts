@@ -71,7 +71,9 @@ export default defineSchema({
 
   userAiSettings: defineTable({
     ownerId: v.string(),
-    preferredProvider: v.optional(v.union(v.literal("Azure"), v.literal("OpenAI"), v.literal("Anthropic"), v.literal("Google"))),
+    preferredProvider: v.optional(
+      v.union(v.literal("Azure"), v.literal("OpenAI"), v.literal("Anthropic"), v.literal("Google"))
+    ),
     monthlyTokenLimit: v.number(),
     monthlyTokenUsed: v.number(),
     monthlyResetAt: v.number(),
