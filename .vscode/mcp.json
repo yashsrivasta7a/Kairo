@@ -1,0 +1,18 @@
+{
+  "servers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp"
+    },
+    "excalidraw": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@cmd8/excalidraw-mcp",
+        "--diagram",
+        "${workspaceFolder}/diagrams/workspace.excalidraw"
+      ]
+    }
+  }
+}

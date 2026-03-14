@@ -21,6 +21,27 @@ export const setBuildState = internalMutation({
           v.literal("failed")
         )
       ),
+      stageOutput: v.optional(v.string()),
+      provider: v.optional(v.string()),
+      model: v.optional(v.string()),
+      usagePromptTokens: v.optional(v.number()),
+      usageCompletionTokens: v.optional(v.number()),
+      usageTotalTokens: v.optional(v.number()),
+      debugTrace: v.optional(
+        v.array(
+          v.object({
+            stage: v.string(),
+            provider: v.string(),
+            model: v.string(),
+            promptPreview: v.string(),
+            responsePreview: v.string(),
+            promptTokens: v.number(),
+            completionTokens: v.number(),
+            totalTokens: v.number(),
+            updatedAt: v.number(),
+          })
+        )
+      ),
       error: v.optional(v.string()),
       updatedAt: v.number(),
     }),

@@ -21,6 +21,27 @@ export default defineSchema({
     storageId: v.optional(v.id("_storage")),
     status: buildStatus,
     stage: buildStage,
+    stageOutput: v.optional(v.string()),
+    provider: v.optional(v.string()),
+    model: v.optional(v.string()),
+    usagePromptTokens: v.optional(v.number()),
+    usageCompletionTokens: v.optional(v.number()),
+    usageTotalTokens: v.optional(v.number()),
+    debugTrace: v.optional(
+      v.array(
+        v.object({
+          stage: v.string(),
+          provider: v.string(),
+          model: v.string(),
+          promptPreview: v.string(),
+          responsePreview: v.string(),
+          promptTokens: v.number(),
+          completionTokens: v.number(),
+          totalTokens: v.number(),
+          updatedAt: v.number(),
+        })
+      )
+    ),
     error: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -47,4 +68,24 @@ export default defineSchema({
     .index("by_buildId", ["buildId"])
     .index("by_buildId_model", ["buildId", "model"])
     .index("by_buildId_model_entityId", ["buildId", "model", "entityId"]),
+
+  userAiSettings: defineTable({
+    ownerId: v.string(),
+    preferredProvider: v.optional(v.union(v.literal("Azure"), v.literal("OpenAI"), v.literal("Anthropic"), v.literal("Google"))),
+    monthlyTokenLimit: v.number(),
+    monthlyTokenUsed: v.number(),
+    monthlyResetAt: v.number(),
+    apiKeys: v.optional(
+      v.object({
+        azureEndpoint: v.optional(v.string()),
+        azureApiKey: v.optional(v.string()),
+        azureDeploymentName: v.optional(v.string()),
+        openAiApiKey: v.optional(v.string()),
+        anthropicApiKey: v.optional(v.string()),
+        googleApiKey: v.optional(v.string()),
+      })
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_ownerId", ["ownerId"]),
 });

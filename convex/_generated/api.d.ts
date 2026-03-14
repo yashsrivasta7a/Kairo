@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as aiSettings from "../aiSettings.js";
 import type * as auth from "../auth.js";
 import type * as buildAccess from "../buildAccess.js";
 import type * as buildFiles from "../buildFiles.js";
@@ -24,6 +25,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  aiSettings: typeof aiSettings;
   auth: typeof auth;
   buildAccess: typeof buildAccess;
   buildFiles: typeof buildFiles;
