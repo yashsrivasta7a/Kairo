@@ -6,6 +6,8 @@ export const setBuildState = internalMutation({
     buildId: v.id("builds"),
     patch: v.object({
       code: v.optional(v.string()),
+      sourcePrompt: v.optional(v.string()),
+      buildMode: v.optional(v.union(v.literal("fast"), v.literal("balanced"))),
       storageId: v.optional(v.id("_storage")),
       status: v.optional(
         v.union(v.literal("idle"), v.literal("generating"), v.literal("completed"), v.literal("failed"))
@@ -13,9 +15,13 @@ export const setBuildState = internalMutation({
       stage: v.optional(
         v.union(
           v.literal("idle"),
+          v.literal("planning"),
+          v.literal("design"),
+          v.literal("logic"),
           v.literal("specs"),
           v.literal("screens"),
           v.literal("gluing"),
+          v.literal("assembly"),
           v.literal("validation"),
           v.literal("completed"),
           v.literal("failed")

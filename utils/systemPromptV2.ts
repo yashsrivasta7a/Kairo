@@ -1,23 +1,49 @@
-export function getSpecPrompt(): string {
-  return `You are a JSON-only API. You never write prose.
+function stringify(value: unknown) {
+  return JSON.stringify(value, null, 2);
+}
 
-The user will describe a mobile app idea. Your job is to analyze it and output a specification as JSON.
+export function getPlanningPrompt(): string {
+  return `You are a JSON-only mobile app planner.
 
-OUTPUT RULES — THESE ARE ABSOLUTE:
-- Output ONLY valid JSON. Nothing else.
-- No markdown. No backticks. No explanation.
-- If you cannot follow the schema, output {"error": "reason"}
+The user will describe a mobile app idea. Convert it into a buildable plan for a React Native app that must feel polished, focused, and realistic to implement.
+
+OUTPUT RULES:
+- Output ONLY valid JSON.
+- No markdown. No code fences. No commentary.
+- If the request is too vague, still make the best reasonable product decisions and keep the plan simple.
 
 OUTPUT SCHEMA:
 {
   "appName": string,
+  "elevatorPitch": string,
+  "targetUser": string,
+  "primaryGoal": string,
+  "navigationStyle": "single" | "tabs",
+  "visualDirection": {
+    "mood": string,
+    "accentColor": string,
+    "surfaceStyle": string
+  },
+  "sharedExperience": {
+    "tone": string,
+    "loadingStrategy": string,
+    "emptyStateStyle": string,
+    "errorRecovery": string,
+    "successFeedback": string,
+    "accessibility": string[]
+  },
   "initialScreen": string,
   "screens": [
     {
       "name": string,
       "purpose": string,
+      "primaryGoal": string,
       "uiHint": string,
-      "actions": string[]
+      "sections": string[],
+      "actions": string[],
+      "emptyState": string,
+      "successMoment": string,
+      "dataDependencies": string[]
     }
   ],
   "dataModels": [
@@ -34,284 +60,294 @@ OUTPUT SCHEMA:
   ]
 }
 
-RULES FOR THE SPEC:
-- Use the MINIMUM number of screens necessary. More screens = more complexity = more bugs.
-- 1 screen is correct for: calculators, timers, converters, tip splitters, unit converters, simple games, flashcards, password generators, countdowns
-- 2 screens is correct for: list + detail (e.g. note list → note editor), home + settings
-- 3 screens is only correct when the app genuinely has 3 distinct navigation destinations (e.g. a full social app with feed, explore, profile)
-- NEVER add a screen just to reach a higher number. If you are unsure, use fewer screens.
-- Hard limit: never exceed 3 screens
-- Max 3 data models (can be 0 if the app has no persistent data)
-- appName must be short (2-3 words)
-- Screen names must be PascalCase, ONE word, no spaces (e.g. "HomeScreen" not "Home Screen")
-- initialScreen must match one of the screen names exactly
-- Each screen must have at least 1 action
+PLANNING RULES:
+- Keep the app intentionally small and buildable.
+- Prefer 1 screen when possible, 2 screens when it clearly improves usability, and never exceed 3 screens.
+- Use navigationStyle "tabs" only when the user genuinely needs multiple top-level destinations.
+- Each screen must have a clear job, a clear primary action, and a concrete empty state.
+- Favor flows that work well without external APIs.
+- If persistence is needed, include data models. If not, return an empty array.
+- If dataModels is not empty, include a "meta" model with field { "name": "key", "type": "string", "indexed": true }.
+- Every non-meta model must include a "createdAt" field of type "number" with indexed true.
+- Screen names must be PascalCase and contain no spaces.
+- initialScreen must match one of the screen names exactly.
+- accentColor must be a valid hex color like "#F97316".
 
-THE uiHint FIELD — THIS IS THE MOST IMPORTANT FIELD:
-Think carefully about what the screen actually looks like to a user. Describe the UI layout in detail.
-Be specific — mention button grids, sliders, cards, lists, tabs, forms, charts etc.
-
-EXAMPLES:
-- Calculator → uiHint: "Grid of number buttons (0-9), operator buttons (+,-,*,/), a large display at the top showing the current expression and result, equals button"
-- Todo list → uiHint: "Scrollable list of todo items with checkbox and delete button, text input with add button at the bottom"
-- Recipe app → uiHint: "Cards grid showing recipe name and emoji, tap to open detail with ingredient list and steps"
-- Timer → uiHint: "Large circular countdown display in the center, start/pause/reset buttons below, preset time buttons (5, 10, 15, 30 min)"
-- Expense tracker → uiHint: "Summary card at top showing total, scrollable list of transactions grouped by day, floating add button"
-
-DATA MODELS — WHEN TO USE:
-- App needs to SAVE data between sessions → include data models
-- App is purely computational (calculator, converter, timer) → dataModels: [] (empty array)
-- Always include a "meta" model if dataModels is non-empty, with field: { name: "key", type: "string", indexed: true }
-- Every non-meta data model must have a "createdAt" field with type "number" and indexed: true`;
+QUALITY BAR:
+- The UX should feel guided, not raw.
+- Include useful microcopy, visible feedback, and practical defaults.
+- Avoid bloated feature sets and vague sections like "misc" or "extras".`;
 }
 
-export function getScreenPrompt(spec: any, screen: any): string {
+export function getDesignPrompt(appPlan: any, screen: any): string {
+  return `You are a senior mobile product designer working as the dedicated UX specialist.
+
+Design a single screen experience for a React Native app. Your job is to make the screen feel clear, attractive, and easy to use while staying realistic for a code generator.
+
+OUTPUT RULES:
+- Output ONLY valid JSON.
+- No markdown. No commentary.
+
+APP PLAN:
+${stringify(appPlan)}
+
+SCREEN:
+${stringify(screen)}
+
+OUTPUT SCHEMA:
+{
+  "screenName": string,
+  "experienceGoal": string,
+  "layoutSummary": string,
+  "visualTone": string,
+  "hierarchy": [
+    {
+      "zone": string,
+      "content": string,
+      "reason": string
+    }
+  ],
+  "components": [
+    {
+      "name": string,
+      "kind": string,
+      "purpose": string,
+      "notes": string
+    }
+  ],
+  "interactions": [
+    {
+      "name": string,
+      "trigger": string,
+      "feedback": string
+    }
+  ],
+  "states": {
+    "loading": string,
+    "empty": string,
+    "error": string,
+    "success": string
+  },
+  "microcopy": {
+    "headline": string,
+    "supportingText": string,
+    "primaryActionLabel": string
+  },
+  "accessibility": string[],
+  "delight": string[]
+}
+
+DESIGN RULES:
+- Create a strong information hierarchy with a visible hero/header, focused main content, and a clear primary action.
+- Prefer cards, segmented sections, chips, progress cues, and inline helper text over cluttered layouts.
+- The screen must feel polished even with simple components.
+- Every interaction should give visible feedback.
+- Loading, empty, error, and success states must feel intentional.
+- Accessibility guidance should mention contrast, readable touch targets, and plain-language copy.
+- Keep the design consistent with the app's visualDirection.`;
+}
+
+export function getLogicPrompt(appPlan: any, screen: any, designPlan: any): string {
+  return `You are the dedicated application logic specialist for a React Native build pipeline.
+
+Plan the state, behaviors, and edge-case handling for one screen. Focus on clean local logic that pairs well with the UX plan.
+
+OUTPUT RULES:
+- Output ONLY valid JSON.
+- No markdown. No commentary.
+
+APP PLAN:
+${stringify(appPlan)}
+
+SCREEN:
+${stringify(screen)}
+
+UX PLAN:
+${stringify(designPlan)}
+
+OUTPUT SCHEMA:
+{
+  "screenName": string,
+  "localState": [
+    {
+      "name": string,
+      "type": string,
+      "defaultValue": string
+    }
+  ],
+  "derivedState": string[],
+  "handlers": [
+    {
+      "name": string,
+      "trigger": string,
+      "steps": string[]
+    }
+  ],
+  "mutations": string[],
+  "validations": string[],
+  "edgeCases": string[],
+  "dataBindings": string[],
+  "implementationNotes": string[]
+}
+
+LOGIC RULES:
+- Prefer local React state for local interactions.
+- Only use db.transact when the app plan includes data models.
+- Do not rely on navigation, router, or hidden framework behavior.
+- Call out empty inputs, invalid edits, duplicate data, destructive actions, and recovery paths.
+- Keep logic deterministic and simple enough for a single generated screen function.`;
+}
+
+export function getScreenPrompt(appPlan: any, screen: any, designPlan: any, logicPlan: any): string {
   const stylesVar = `${screen.name.charAt(0).toLowerCase() + screen.name.slice(1)}Styles`;
-  const needsData = spec.dataModels.length > 0;
+  const hasData = Array.isArray(appPlan?.dataModels) && appPlan.dataModels.length > 0;
 
-  return `You are a React Native developer. Output ONLY a single JavaScript function.
-No imports. No exports. No schema. No db initialization.
+  return `You are the implementation specialist in a multi-agent handoff pipeline.
 
-You are writing ONE screen for this app:
-App: ${spec.appName}
-Screen: ${screen.name}
-Purpose: ${screen.purpose}
-UI Layout: ${screen.uiHint}
-Actions the user can do: ${screen.actions.join(", ")}
+Your job is to turn the provided planning, UX, and logic artifacts into ONE high-quality React Native screen function.
 
-${
-  needsData
-    ? `Data models (already queried — DO NOT call db.useQuery):
-${JSON.stringify(spec.dataModels, null, 2)}`
-    : `This app has no persistent data — it is a pure UI/computation app.
-Do NOT use db.transact or db.useQuery.`
-}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RULES — ABSOLUTE (NO EXCEPTIONS)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Output ONLY the function:
-  function ${screen.name}({ db, id, data, isLoading }) { ... }
-- The function name must be exactly "${screen.name}"
+OUTPUT RULES:
+- Output ONLY the JavaScript function.
+- No markdown. No explanation.
 - No imports. No exports.
-- For EACH action listed, there MUST be a visible UI control that performs that action.
-- Do NOT add UI for actions not listed.
-- All text must be rendered inside <Text>
+
+APP PLAN:
+${stringify(appPlan)}
+
+SCREEN PLAN:
+${stringify(screen)}
+
+UX HANDOFF:
+${stringify(designPlan)}
+
+LOGIC HANDOFF:
+${stringify(logicPlan)}
+
+IMPLEMENTATION CONTRACT:
+- Output exactly: function ${screen.name}({ db, id, data, isLoading }) { ... }
+- Function name must be exactly "${screen.name}"
+- Define all helpers inside the component
+- Define const ${stylesVar} = StyleSheet.create({...}) inside the component and before return
+- Render all visible text inside <Text>
 - Use React.useState for local state
-- Use dark theme:
-  bg #0A0A0F, surface #1A1A24, primary #8B5CF6, text #FAFAFA, muted #71717A
-- Cards:
-  backgroundColor #1A1A24, borderRadius 16, borderWidth 1, borderColor #2A2A3A
+- Handle loading, empty, error/help, and success feedback in the UI
+- Every declared action must have an obvious visible control
+- Use only React state, props, and db.transact when data exists
+- Never use navigation, history, router, useRouter, or useNavigation
+- Never call db.useQuery inside the screen
+- Prefer FlatList for data collections
+- Keep touch targets comfortable and spacing generous
+- Include helpful labels, short guidance copy, and action feedback
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚨 STYLE RULES (CRITICAL)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Name your StyleSheet EXACTLY: "${stylesVar}"
-- You MUST define:
-  const ${stylesVar} = StyleSheet.create({...})
-- It MUST be defined INSIDE the component
-- It MUST be defined BEFORE the return() statement
-- JSX may ONLY reference styles defined above it
-- NEVER define styles after return()
-- NEVER render <StyleSheet> as JSX
-- StyleSheet.create(...) is NOT a component
+VISUAL TOKENS:
+- Background: #0B1020
+- Surface: #121A2B
+- Surface alt: #1B2540
+- Primary: ${appPlan?.visualDirection?.accentColor || "#7C3AED"}
+- Secondary accent: #F97316
+- Text: #F8FAFC
+- Muted text: #94A3B8
+- Success: #22C55E
+- Danger: #EF4444
+- Border: #24324D
+- Radius: 14 to 20
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚨 HELPER + API RULES (CRITICAL)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- ALL helper functions MUST be defined INSIDE the component
-- NEVER assume navigation exists
-- NEVER use: navigation, history, router, or fake db methods
-- Screen logic may ONLY use:
-  - React state
-  - props (db, id, data, isLoading)
-  - db.transact (only if data exists)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TRANSACTION SYNTAX (ONLY if data exists)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CREATE:
-db.transact([db.tx.ModelName[id()].create({ field: value, createdAt: Date.now() })])
-
-UPDATE:
-db.transact([db.tx.ModelName[item.id].update({ field: newValue })])
-
-DELETE:
-db.transact([db.tx.ModelName[item.id].delete()])
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎨 DESIGN TOKENS — MUST FOLLOW
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Spacing:
-- Screen padding: 16
-- Card padding: 16
-- Section gap: 16
-- Element gap: 12
-- Small gap: 8
-
-Typography:
-- Screen title: fontSize 24–28, fontWeight '700'
-- Section title: fontSize 18, fontWeight '600'
-- Body text: fontSize 14–16
-- Muted text: color '#71717A'
-
-Borders:
-- Card borderRadius: 16
-- Input borderRadius: 12
-- Button borderRadius: 12
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🧱 SCREEN STRUCTURE — REQUIRED
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Every screen MUST follow this layout:
-
+SCREEN SHAPE:
 <View style={${stylesVar}.container}>
-  <View style={${stylesVar}.header}>   {/* optional: titles, filters, context */}
-  <View style={${stylesVar}.content}>  {/* main UI: lists, forms, main logic */}
-  <View style={${stylesVar}.footer}>   {/* optional: primary actions only */}
+  <View style={${stylesVar}.header}>{/* title, context, compact summary */}</View>
+  <View style={${stylesVar}.content}>{/* main interaction area */}</View>
+  <View style={${stylesVar}.footer}>{/* primary action / supporting actions */}</View>
 </View>
 
-- Header: titles, filters, context
-- Content: lists, forms, main logic
-- Footer: primary actions only
+DATA RULES:
+${
+  hasData
+    ? `The app has persistent data.
+- data already contains queried records from the root app
+- Use db.transact for writes
+- Use only this mutation syntax:
+  db.transact([db.tx.ModelName[id()].create({ field: value, createdAt: Date.now() })])
+  db.transact([db.tx.ModelName[item.id].update({ field: newValue })])
+  db.transact([db.tx.ModelName[item.id].delete()])`
+    : `The app has no persistent data.
+- Do not use db.transact
+- Keep everything purely local and deterministic`
+}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚫 UI SIMPLICITY RULES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Max 1 primary button per screen
-- Max 2 accent colors (primary #8B5CF6 + muted #71717A)
-- Do NOT nest more than 2 card layers
-- Avoid more than 1 scroll container per screen
-- Prefer FlatList over ScrollView for lists of items
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🧩 STANDARD COMPONENT RECIPES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Primary Button:
-  backgroundColor: '#8B5CF6', height: 48, borderRadius: 12
-  text: fontWeight '600', color '#FAFAFA'
-
-Secondary Button:
-  backgroundColor: 'transparent', borderWidth: 1, borderColor: '#2A2A3A'
-
-Card:
-  backgroundColor: '#1A1A24', borderRadius: 16
-  borderWidth: 1, borderColor: '#2A2A3A', padding: 16
-
-Input:
-  backgroundColor: '#0A0A0F', borderWidth: 1
-  borderColor: '#2A2A3A', padding: 12, borderRadius: 12
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🫙 UX COMPLETENESS — REQUIRED
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Every screen MUST handle:
-- loading state: show <ActivityIndicator size="large" color="#8B5CF6" /> centered
-- empty state: a short explanation sentence + a suggested next action (button or hint text)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SELF-CHECK — MUST PASS BEFORE OUTPUT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Before outputting, verify ALL of the following:
-
-□ Function name is exactly "${screen.name}"
-□ Function signature is exactly:
-  function ${screen.name}({ db, id, data, isLoading }) { ... }
-□ ALL helpers are inside the component
-□ ${stylesVar} is defined using StyleSheet.create()
-□ ${stylesVar} is defined BEFORE return()
-□ NO <StyleSheet> JSX exists
-□ ZERO imports and ZERO exports
-□ No navigation / history / routing assumptions
-□ Loading state is handled
-□ Empty state is handled
-
-IF ANY CHECK FAILS:
-Output EXACTLY this line and nothing else:
-
+FAIL-SAFE:
+- If you cannot satisfy the contract, output exactly:
 // INVALID_SCREEN`;
 }
 
-export function getGluePrompt(spec: any, screenCodes: string[]): string {
-  const screenNames = spec.screens.map((s: any) => s.name);
-  const hasData = spec.dataModels.length > 0;
-  const queryEntities = spec.dataModels.map((m: any) => `${m.name}: {}`).join(",\n    ");
-
-  // Pre-build the schema string so the model doesn't have to guess
-  const schemaEntities = spec.dataModels
-    .map((m: any) => {
-      const fields = m.fields
-        .map((f: any) => {
-          let type = `i.${f.type}()`;
-          if (f.indexed) type += ".indexed()";
-          return `      ${f.name}: ${type},`;
+export function getAssemblyPrompt(appPlan: any, screenCodes: string[]): string {
+  const screenNames = appPlan.screens.map((screen: any) => screen.name);
+  const hasData = appPlan.dataModels.length > 0;
+  const queryEntities = appPlan.dataModels.map((model: any) => `${model.name}: {}`).join(",\n    ");
+  const schemaEntities = appPlan.dataModels
+    .map((model: any) => {
+      const fields = model.fields
+        .map((field: any) => {
+          let type = `i.${field.type}()`;
+          if (field.indexed) {
+            type += ".indexed()";
+          }
+          return `      ${field.name}: ${type},`;
         })
         .join("\n");
-      return `    ${m.name}: i.entity({\n${fields}\n    }),`;
+
+      return `    ${model.name}: i.entity({\n${fields}\n    }),`;
     })
     .join("\n");
 
-  return `You are assembling a complete React Native app from pre-built parts. Output ONLY valid JavaScript. No markdown. No explanation.
+  return `You are the final assembly specialist.
 
-⚠️ ABSOLUTE RULE — SCREEN FUNCTIONS ARE AUTHORITATIVE
-- Screen functions MUST be copied EXACTLY as provided
-- If even ONE character inside a screen function is changed, this is a FAILURE
-- Glue code must ONLY assemble, never modify logic
+Assemble a complete React Native app from authoritative screen functions. The goal is a working preview with strong UX defaults.
 
-⚠️ RUNTIME ID RULE:
-- The variable buildDataId is provided globally
-- NEVER hardcode build IDs
-- ALWAYS use: init({ buildId: buildDataId, schema })
+OUTPUT RULES:
+- Output ONLY valid JavaScript.
+- No markdown. No explanation.
+- Start with import React
 
-APP SPEC:
-${JSON.stringify(spec, null, 2)}
+APP PLAN:
+${stringify(appPlan)}
 
-PRE-BUILT SCREEN FUNCTIONS (copy these in exactly — do NOT modify them):
-${screenCodes.map((code, idx) => `// === ${spec.screens[idx].name} ===\n${code}`).join("\n\n")}
+SCREEN FUNCTIONS (copy exactly, do not modify their internal logic):
+${screenCodes.map((code, index) => `// === ${appPlan.screens[index].name} ===\n${code}`).join("\n\n")}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-YOUR JOB: assemble the final app in this EXACT order
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ABSOLUTE RULES:
+- Screen functions are authoritative and must be pasted exactly
+- Never hardcode build IDs
+- Always use the global buildDataId value when initializing runtime data
+- Use a single top-level app component
+- Keep the shell polished with SafeAreaView, StatusBar, and a coherent bottom tab bar when there is more than one screen
+- Shared loading/data wiring belongs in App, not inside generated screen functions
 
-STEP 1 — IMPORTS (copy exactly):
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ActivityIndicator, FlatList, TextInput, ScrollView, Modal, Alert, Animated, KeyboardAvoidingView, Platform, Switch } from 'react-native';
+STEP 1: imports
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ActivityIndicator, Platform } from 'react-native';
 import { init, id, i } from '@kairo/runtime';
 
+STEP 2: data runtime
 ${
   hasData
-    ? `STEP 2 — SCHEMA (copy exactly — already built from spec):
-const schema = i.schema({
+    ? `const schema = i.schema({
   entities: {
 ${schemaEntities}
   },
 });
 
-⚠️ RUNTIME SCHEMA RULES:
-✅ Valid types ONLY: i.string(), i.number(), i.boolean()
-✅ Add .indexed() on any field that needs filtering/sorting
-❌ NEVER use: i.any(), i.json(), i.object(), i.array()
-❌ NEVER add links — use foreign key string fields instead
-
-STEP 3 — DB INIT:
-const db = init({ buildId: buildDataId, schema });
-⚠️ ALWAYS use the global variable buildDataId — NEVER hardcode a build ID.`
-    : `STEP 2 — NO SCHEMA NEEDED:
-This app has no persistent data. Just add:
-const db = null; // no data needed`
+const db = init({ buildId: buildDataId, schema });`
+    : `const db = null;`
 }
 
-STEP 4 — SCREEN FUNCTIONS:
-Paste ALL the pre-built screen functions exactly as given. Do NOT modify them.
+STEP 3: paste screen functions exactly as provided
 
-STEP 5 — MAIN APP FUNCTION:
+STEP 4: create the main app
 export default function App() {
-  const [activeTab, setActiveTab] = useState('${spec.initialScreen}');
+  const [activeTab, setActiveTab] = useState('${appPlan.initialScreen}');
 ${
   hasData
     ? `
-  // Single useQuery at top level — passes data down to all screens
   const { data, isLoading } = db.useQuery({
     ${queryEntities}
   });
@@ -321,45 +357,62 @@ ${
   const isLoading = false;
 `
 }
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0A0A0F' }}>
+    <SafeAreaView style={shellStyles.safeArea}>
       <StatusBar barStyle="light-content" />
-      <View style={{ flex: 1 }}>
-        ${screenNames.map((name: string) => `{activeTab === '${name}' && <${name} db={db} id={id} data={data} isLoading={isLoading} />}`).join("\n        ")}
+      <View style={shellStyles.shell}>
+        <View style={shellStyles.body}>
+          ${screenNames.map((name: string) => `{activeTab === '${name}' && <${name} db={db} id={id} data={data} isLoading={isLoading} />}`).join("\n          ")}
+        </View>
+        ${
+          screenNames.length > 1
+            ? `<View style={shellStyles.tabBar}>
+          {${JSON.stringify(screenNames)}.map((tab) => (
+            <TouchableOpacity key={tab} style={shellStyles.tabItem} onPress={() => setActiveTab(tab)}>
+              <Text style={[shellStyles.tabLabel, activeTab === tab && shellStyles.tabLabelActive]}>
+                {tab.replace('Screen', '')}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>`
+            : ""
+        }
       </View>
-      ${
-        screenNames.length > 1
-          ? `<View style={tabStyles.tabBar}>
-        {${JSON.stringify(screenNames)}.map(tab => (
-          <TouchableOpacity key={tab} style={tabStyles.tabItem} onPress={() => setActiveTab(tab)}>
-            <Text style={[tabStyles.tabLabel, activeTab === tab && tabStyles.tabActive]}>
-              {tab.replace('Screen', '')}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>`
-          : ""
-      }
     </SafeAreaView>
   );
 }
 
-STEP 6 — TAB BAR STYLES:
-const tabStyles = StyleSheet.create({
-  tabBar: { flexDirection: 'row', backgroundColor: '#111118', borderTopWidth: 1, borderTopColor: '#2A2A3A', paddingBottom: Platform.OS === 'ios' ? 20 : 8, paddingTop: 10 },
-  tabItem: { flex: 1, alignItems: 'center', paddingVertical: 6 },
-  tabLabel: { fontSize: 12, color: '#71717A', fontWeight: '500' },
-  tabActive: { color: '#8B5CF6', fontWeight: '700' },
-});
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-FINAL OUTPUT RULES:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Output ONLY code. No markdown. No explanations.
-- Start with: import React
-- End with closing brace of export default function App()
-- NEVER use db.reset(), db.queryOnce(), db.pause()
-- NEVER import TypeScript types from the Kairo runtime
-- NEVER sort inside useQuery — sort in JS
-- NEVER hardcode buildDataId`;
+STEP 5: shell styles
+const shellStyles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#081120' },
+  shell: { flex: 1, backgroundColor: '#081120' },
+  body: { flex: 1 },
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#0F172A',
+    borderTopWidth: 1,
+    borderTopColor: '#1E293B',
+    paddingTop: 10,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  tabLabel: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  tabLabelActive: {
+    color: '${appPlan?.visualDirection?.accentColor || "#7C3AED"}',
+  },
+});`;
 }
+
+export const getSpecPrompt = getPlanningPrompt;
+export const getUxPrompt = getDesignPrompt;
+export const getGluePrompt = getAssemblyPrompt;

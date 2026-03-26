@@ -15,6 +15,7 @@ import type * as buildFiles from "../buildFiles.js";
 import type * as builds from "../builds.js";
 import type * as generatedApps from "../generatedApps.js";
 import type * as generation from "../generation.js";
+import type * as generationRunner from "../generationRunner.js";
 import type * as generationState from "../generationState.js";
 import type * as http from "../http.js";
 
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   builds: typeof builds;
   generatedApps: typeof generatedApps;
   generation: typeof generation;
+  generationRunner: typeof generationRunner;
   generationState: typeof generationState;
   http: typeof http;
 }>;

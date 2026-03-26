@@ -5,9 +5,13 @@ const buildStatus = v.union(v.literal("idle"), v.literal("generating"), v.litera
 
 const buildStage = v.union(
   v.literal("idle"),
+  v.literal("planning"),
+  v.literal("design"),
+  v.literal("logic"),
   v.literal("specs"),
   v.literal("screens"),
   v.literal("gluing"),
+  v.literal("assembly"),
   v.literal("validation"),
   v.literal("completed"),
   v.literal("failed")
@@ -18,6 +22,9 @@ export default defineSchema({
     ownerId: v.string(),
     appName: v.string(),
     slug: v.string(),
+    code: v.optional(v.string()),
+    sourcePrompt: v.optional(v.string()),
+    buildMode: v.optional(v.union(v.literal("fast"), v.literal("balanced"))),
     storageId: v.optional(v.id("_storage")),
     status: buildStatus,
     stage: buildStage,
